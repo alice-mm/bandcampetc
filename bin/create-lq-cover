@@ -1,0 +1,90 @@
+#! /usr/bin/env bash
+
+#  $1   JPG, typically an album cover.
+# [$2]  The basename for the LQ version.
+# → A “cover_lq.jpg” file in the same directory as $1, with lower quality.
+
+unset -v needed
+needed=(
+    identify
+    mogrify
+)
+
+: ${1:?Please provide a JPG file.}
+COVER_LQ_BASENAME="${2:-cover_lq.jpg}"
+
+if ! which "${needed[@]}" &> /dev/null
+then
+    echo "$(basename "$0"): Error: Please check that the following programs are available: ${needed[@]}" >&2
+    exit 1
+fi
+
+cover_lq="$(dirname "$1")"/"$COVER_LQ_BASENAME"
+cp "$1" "$cover_lq" || exit
+
+size_orig=$(du -b "$1" | cut -f1)
+
+read dims_orig_x dims_orig_y < <(
+    identify -ping -format '%[fx:w] %[fx:h]' "$1"
+)
+
+if [ -z "$dims_orig_x" ] || [ -z "$dims_orig_y" ]
+then
+    echo "$(basename "$0"): Warning: Could not get dimensions of “$1”." >&2
+fi
+
+unset -v resize quality
+
+# If the picture is large enough, we use precise dimensions rather than
+# a ratio (for the "resize" operation).
+if [ "$dims_orig_x" ] && [ "$dims_orig_x" -ge 512 ] &&
+    [ "$dims_orig_y" ] && [ "$dims_orig_y" -ge 512 ]
+then
+    resize='512x512'
+    quality=85
+else
+    # Depending on the size of the file, we will perform different
+    # modifications to make it lighter.
+    if [ "$size_orig" -ge 500000 ]
+    then
+        quality=25
+    elif [ "$size_orig" -ge 250000 ]
+    then
+        quality=35
+    elif [ "$size_orig" -ge 100000 ]
+    then
+        quality=50
+    elif [ "$size_orig" -ge 75000 ]
+    then
+        quality=65
+    elif [ "$size_orig" -ge 50000 ]
+    then
+        quality=80
+    elif [ "$size_orig" -ge 25000 ]
+    then
+        quality=90
+    fi
+fi # /else file too small.
+
+if [ -n "$resize" ]
+then
+    mogrify -resize "$resize" "$cover_lq" ||
+    exit
+fi
+
+if [ -n "$quality" ]
+then
+    mogrify -quality "$quality" "$cover_lq" ||
+    exit
+fi
+
+printf ' HQ → “%s” (%s)\n' "$1" "$(du -h "$1" | cut -f 1)"
+printf ' LQ → “%s” (resize: %s; quality: %s) (%s)\n' \
+        "$cover_lq" "$(
+            sed '
+                s/x/×/
+            ' <<< "${resize:-100%}"
+        )" "${quality:-100}" \
+        $(du -h "$cover_lq" | cut -f 1)
+
+exit 0

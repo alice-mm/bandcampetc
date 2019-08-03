@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+# This might fail on case-insensitive systems, because "Plop" and "plop" are
+# considered to be the same name.
+
+RENAME_SCRIPT="$HOME"'/scripts/to_acceptable_name'
+
+if ! [ "$(which "$RENAME_SCRIPT")" ]
+then
+    echo "$(basename "$0"): Renaming script not found or executable." >&2
+    exit 1
+fi
+
+for file in "$@"
+do
+    dest_dir="$(dirname "$file")"
+    dest_base="$(
+        basename "$file" | $RENAME_SCRIPT
+    )"
+    
+    # If there is a directory using the name we chose, we might end up
+    # storing the file in the directory without renaming the file, so let's
+    # add a suffix if necessary.
+    suffix=''
+    dest_base_no_suffix="$dest_base"
+    
+    # While the chosen name is already in use because of ANOTHER file...
+    while [ -e "$dest_dir"/"$dest_base" ] && [ ! "$dest_dir"/"$dest_base" -ef "$file" ]
+    do
+        if [ "$suffix" ]
+        then
+            # _n --> _n+1
+            suffix="$(tr -cd '0-9' <<< "$suffix" | awk '{ printf("%02d", $1 + 1) }')"
+        else
+            suffix='_02'
+        fi
+        
+        # Adding the suffix just before the extension.
+        # Is there an extension, by the way?
+        if grep -qm 1 '\.[^.]\{1,7\}$' <<< "$dest_base_no_suffix"
+        then
+            dest_base="$(sed 's/\.[^.]*$//' <<< "$dest_base_no_suffix")${suffix}$(sed 's/.*\(\.[^.]*\)$/\1/' <<< "$dest_base_no_suffix")"
+        else
+            dest_base="${dest_base_no_suffix}${suffix}"
+        fi
+    done
+    
+    if [ -e "$dest_dir"/"$dest_base" ]
+    then
+        #echo "$(basename "$0"): Nothing to be done for \"${file}\"."
+        :
+    else
+        mv -nv "$file" "$dest_dir"/"$dest_base"
+    fi
+done
+
+exit 0
