@@ -75,7 +75,7 @@ You Will Blow Up a Dog Some Day, as the Other Guy Said
 Le Chien de Ta Mère Est Gros
 --
 
-INFO: Many conventions exist. I used stuff from http://aitech.ac.jp/~ckelly/midi/help/caps.html. (That weird link might become dead or point to something unrelated someday. Use with caution.)
+NOTE: Many conventions exist. I used stuff from http://aitech.ac.jp/~ckelly/midi/help/caps.html. (That weird link might become dead or point to something unrelated someday. Use with caution.)
 
 
 ## `covers`
