@@ -140,13 +140,20 @@ TIP: This script also cuts https://elaltardelholocausto.bandcamp.com/album/i-t[l
 
 ## `give_acceptable_name`
 
-Use `to_acceptable_name` to find a suitable name for a file, and rename that file using that name. I like to add this as a custom action in my file manager. Typically, in Thunar:
+Use `to_acceptable_name` to find a suitable name for a file, and rename that file using that name.
+
+[TIP]
+====
+I like to add this as a custom action in my file manager. Typically, in Thunar:
 
 ```
 give_acceptable_name %F
 ```
 
-(“Edit” → “Configure custom actions…”) (Remember to check that the “Appearance Conditions” are broad enough.)
+(“Edit” → “Configure custom actions…”)
+
+Remember to check that the “Appearance Conditions” are broad enough.
+====
 
 
 # Configuration of the `bandcamp` script
