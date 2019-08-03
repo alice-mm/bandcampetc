@@ -1,7 +1,7 @@
 # Bandcamp, etc. (`bandcampetc`)
 :toc:
 
-Scripts to keep music tidy. The main one extracts and cleans files from https://bandcamp.com/[Bandcamp] and Amazon Music downloads.
+Scripts to keep music tidy. The main one extracts and cleans files from https://bandcamp.com/[Bandcamp] and Amazon Music downloads. It should work with pretty much any ZIP archive that contains MP3 or FLAC files, actually.
 
 
 # Getting started
