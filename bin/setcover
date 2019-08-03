@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+
+# Last modification: 19d02m16y.
+
+# Frontend for eyeD3, which is a bit too violent with --add-image and
+# --remove-images (it accepts about any type of file and it can corrupt stuff).
+# While eyeD3, when called on a directory, seems to process every file in it,
+# this script only tries to do stuff with '*.mp3' / '*.MP3'.
+# Note that if metaflac is installed, FLAC files will be processed too.
+
+
+function f_help {
+    echo "$(basename "$0"): Syntax to tag FILE with PICTURE:"
+    echo "    $(basename "$0") FILE PICTURE"
+    echo "Give an empty string for PICTURE to remove covers."
+    echo "Note that any previous picture will be removed either way."
+    echo "If FILE is a directory, FILE/*.mp3 and FILE/*.MP3 will be targeted."
+    echo "If \"metaflac\" is installed, FLAC files will also be processed."
+}
+
+
+if [ "$#" -eq 1 ] && grep -qxE 'help|-help|--help|-h|h' <<< "$1"
+then
+    f_help
+    exit 0
+fi
+
+
+if [ "$#" -lt 2 ]
+then
+    f_help >&2
+    exit 1
+fi
+
+
+glob_errors=0
+
+
+METAFLAC="$(which metaflac)"
+
+
+# Print "flac" or "mp3" or nothing if unrecognized type.
+# $1 as input.
+function f_gettype {
+    if [ "$(grep -i '\.mp3$' <<< "$1")" -a "$(file -b --mime-type "$1" | grep -x 'audio/mpeg\|application/octet-stream')" ]
+    then
+        echo 'mp3'
+    elif [ "$(grep -i '\.flac$' <<< "$1")" -a "$(file -b --mime-type "$1")" = 'audio/x-flac' ]
+    then
+        echo 'flac'
+    fi
+}
+
+
+# $1    One MP3 file to be tagged.
+# $2    A picture to be used as a FRONT_COVER, or an empty string if the
+#       images must be removed from the file.
+function f_tag {
+    echo "$(basename "$0"): Removing images from \"$1\"..."
+    eyeD3 --no-color --remove-images "$1" 2>&1 > /dev/null | sed 's/^/eyeD3: /' \
+            && echo "OK" \
+            || {
+                echo "Error? ($?)"
+                ((glob_errors++))
+            }
+    if [ "$2" ]
+    then
+        echo "$(basename "$0"): \"$2\" --> \"$1\"..."
+        eyeD3 --no-color --add-image="$2":FRONT_COVER "$1" 2>&1 > /dev/null | sed 's/^/eyeD3: /' \
+                && echo "OK" \
+                || {
+                    echo "Error? ($?)"
+                    ((glob_errors++))
+                }
+    fi
+}
+
+
+# $1    One FLAC file to be tagged.
+# $2    A picture to be used as a FRONT_COVER, or an empty string if the
+#       images must be removed from the file.
+function f_tag_flac {
+    echo "$(basename "$0"): Removing images from \"$1\"..."
+    
+    # For all block numbers coresponding to front covers.
+    nb_removed=0
+    while read -d $'\n' block_num
+    do
+        metaflac --dont-use-padding --remove --block-number="${block_num}" "$1" 2>&1 > /dev/null \
+                | sed 's/^/metaflac: /'
+        status_metaflac="$?"
+        if [ "$status_metaflac" -eq 0 ]
+        then
+            echo "OK"
+            ((nb_removed++))
+        else
+            echo "Error? ($?)"
+            ((glob_errors++))
+        fi
+    done < <(
+        # There are several blocks, each with a number, and the number is a few
+        # lines above the "type: 3 (Cover (front))" part.
+        metaflac --list "$1" \
+                | tac \
+                | sed -n '
+                    # From "blahblah cover front" to "metadata block <number>",
+                    # print the numbers.
+                    /^  type: 3 (Cover (front))$/,/^METADATA block #[0-9]\+$/ s/METADATA block #\([0-9]\+\)/\1/p
+                ' \
+                | grep -x '[0-9]\+'
+    )
+    
+    echo "$(basename "$0"): Removed ${nb_removed} image(s) using metaflac."
+    
+    if [ "$2" ]
+    then
+        echo "$(basename "$0"): \"$2\" --> \"$1\"..."
+        metaflac --import-picture-from "$2" "$1" 2>&1 > /dev/null | sed 's/^/metaflac: /' \
+                && echo "OK" \
+                || {
+                    echo "Error? ($?)"
+                    ((glob_errors++))
+                }
+    fi
+}
+
+
+# $1    Target.
+# $2    Picture.
+function f_single_file {
+    type="$(f_gettype "$1")"
+    
+    if [ ! "$type" ]
+    then
+        echo "$(basename "$0"): Error: \"$1\" does not look like a MP3 or FLAC file." >&2
+        exit 6
+    fi
+    
+    case "$type" in
+        mp3)
+            f_tag "$1" "$2"
+            ;;
+        flac)
+            if [ "$METAFLAC" ]
+            then
+                f_tag_flac "$1" "$2"
+            else
+                echo "$(basename "$0"): Error: Cannot tag \"$1\" because metaflac does not seem to be installed." >&2
+            fi
+            ;;
+        *)
+            echo "$(basename "$0"): Error: Type \"$type\" not fully supported." >&2
+            ;;
+    esac
+}
+
+
+pic="$2"
+
+if [ "$pic" ]
+then
+    if [ ! -r "$pic" ]
+    then
+        echo "$(basename "$0"): Error: Could not find or read the picture \"$pic\"." >&2
+        exit 2
+    fi
+
+    mime="$(file -b --mime-type "$pic")"
+
+    if [ "$mime" != 'image/png' -a "$mime" != 'image/jpeg' ]
+    then
+        echo "$(basename "$0"): Error: \"$pic\" does not seem to be a JPG nor a PNG file." >&2
+        exit 3
+    fi
+fi # /if pic not empty
+
+target="$1"
+
+if [ ! -e "$target" ]
+then
+    echo "$(basename "$0"): Error: \"$target\" does not seem to exist." >&2
+    exit 4
+fi
+
+if [ ! -r "$target" ]
+then
+    echo "$(basename "$0"): Error: \"$target\" exists but cannot be read." >&2
+    exit 5
+fi
+
+if [ -d "$target" ]
+then
+    # TARGETING A DIRECTORY
+    target="$(sed 's:/\+$::' <<< "$target")"
+    find "$target" -maxdepth 1 -type f -iregex '.*\.\(mp3\|flac\)' -print0 | while read -rd '' file
+    do
+        test -r "$file" -a -f "$file" || continue
+        f_single_file "$file" "$pic"
+    done
+else
+    # TARGETING A SINGLE FILE
+    f_single_file "$target" "$pic"
+fi
+
+echo "End of $(basename "$0"). ${glob_errors} error(s)."
+
+exit 0

@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+
+# Read song titles through arguments
+# and capitalize them correctly in most cases.
+
+# Rules taken from http://aitech.ac.jp/~ckelly/midi/help/caps.html
+
+# I added French prepositions.
+
+
+LIST_LOWER='(A|An|The|And|But|Or|Nor|At|By|For|From|In|Into|Of|Off|On|Onto|Out|Over|To|Up|Upon|Down|With|As|Along|Back|Away|Un|Une|Le|La|Les|Et|Mais|Ou|Ni|À|Aux|Par|Pour|De|Des|Du|Dans|Hors|Sur|Sous|Avec|Vers|En|Dès|Sans)'
+
+
+for ((k = 1;  k <= "$#";  k++))
+do
+    sed -r '
+        # Every word:
+        s/\b([[:alnum:]])/\u\1/g
+        
+        # Prepositions and stuff:
+        s/\b'"$LIST_LOWER"'\b/\l\1/g
+        
+        # Phrasal verbs:
+        s/\bBeat(s?) up\b/Beat\1 Up/g
+        s/\bBlow(s?) out\b/Blow\1 Out/g
+        s/\bBlow(s?) up\b/Blow\1 Up/g
+        s/\bBreak(s?) down\b/Break\1 Down/g
+        s/\bBreak(s?) into\b/Break\1 Into/g
+        s/\bBreak(s?) up\b/Break\1 Up/g
+        s/\bBring(s?) up\b/Bring\1 Up/g
+        s/\bBring(s?) out\b/Bring\1 Out/g
+        s/\bCall(s?) off\b/Call\1 Off/g
+        s/\bCall(s?) on\b/Call\1 On/g
+        s/\bCall(s?) up\b/Call\1 Up/g
+        s/\bCarry(s?) on\b/Carry\1 On/g
+        s/\bCome(s?) back\b/Come\1 Back/g
+        s/\bCome(s?) down\b/Come\1 Down/g
+        s/\bCome(s?) on\b/Come\1 On/g
+        s/\bCome(s?) out\b/Come\1 Out/g
+        s/\bCome(s?) over\b/Come\1 Over/g
+        s/\bDo(s?) over\b/Do\1 Over/g
+        s/\bFill(s?) in\b/Fill\1 In/g
+        s/\bFill(s?) out\b/Fill\1 Out/g
+        s/\bFind(s?) out\b/Find\1 Out/g
+        s/\bGet(s?) along\b/Get\1 Along/g
+        s/\bGet(s?) around\b/Get\1 Around/g
+        s/\bGet(s?) by\b/Get\1 By/g
+        s/\bGet(s?) over\b/Get\1 Over/g
+        s/\bGet(s?) through\b/Get\1 Through/g
+        s/\bGet(s?) up\b/Get\1 Up/g
+        s/\bGive(s?) back\b/Give\1 Back/g
+        s/\bGive(s?) up\b/Give\1 Up/g
+        s/\bGo(s?) along\b/Go\1 Along/g
+        s/\bGo(s?) away\b/Go\1 Away/g
+        s/\bGo(s?) on\b/Go\1 On/g
+        s/\bGo(s?) over\b/Go\1 Over/g
+        s/\bHand(s?) in\b/Hand\1 In/g
+        s/\bHang(s?) up\b/Hang\1 Up/g
+        s/\bHold(s?) on\b/Hold\1 On/g
+        s/\bKeep(s?) on\b/Keep\1 On/g
+        s/\bKeep(s?) up\b/Keep\1 Up/g
+        s/\bLeave(s?) out\b/Leave\1 Out/g
+        s/\bLet(s?) down\b/Let\1 Down/g
+        s/\bLook(s?) for\b/Look\1 For/g
+        s/\bLook(s?) into\b/Look\1 Into/g
+        s/\bLook(s?) like\b/Look\1 Like/g
+        s/\bLook(s?) out\b/Look\1 Out/g
+        s/\bLook(s?) over\b/Look\1 Over/g
+        s/\bLook(s?) up\b/Look\1 Up/g
+        s/\bMake(s?) out\b/Make\1 Out/g
+        s/\bMake(s?) up\b/Make\1 Up/g
+        s/\bPack(s?) up\b/Pack\1 Up/g
+        s/\bPass(s?) out\b/Pass\1 Out/g
+        s/\bPick(s?) out\b/Pick\1 Out/g
+        s/\bPick(s?) up\b/Pick\1 Up/g
+        s/\bPut(s?) away\b/Put\1 Away/g
+        s/\bPut(s?) off\b/Put\1 Off/g
+        s/\bPut(s?) on\b/Put\1 On/g
+        s/\bPut(s?) out\b/Put\1 Out/g
+        s/\bPut(s?) up\b/Put\1 Up/g
+        s/\bRoll(s?) over\b/Roll\1 Over/g
+        s/\bRun(s?) into\b/Run\1 Into/g
+        s/\bRun(s?) out\b/Run\1 Out/g
+        s/\bRun(s?) over\b/Run\1 Over/g
+        s/\bShow(s?) up\b/Show\1 Up/g
+        s/\bTake(s?) after\b/Take\1 After/g
+        s/\bTake(s?) back\b/Take\1 Back/g
+        s/\bTake(s?) off\b/Take\1 Off/g
+        s/\bTake(s?) on\b/Take\1 On/g
+        s/\bTake(s?) up\b/Take\1 Up/g
+        s/\bTalk(s?) back\b/Talk\1 Back/g
+        s/\bTalk(s?) over\b/Talk\1 Over/g
+        s/\bThrow(s?) away\b/Throw\1 Away/g
+        s/\bTr(y|ies) on\b/Tr\1 On/g
+        s/\bTr(y|ies) out\b/Tr\1 Out/g
+        s/\bTurn(s?) down\b/Turn\1 Down/g
+        s/\bTurn(s?) in\b/Turn\1 In/g
+        s/\bTurn(s?) off\b/Turn\1 Off/g
+        s/\bTurn(s?) on\b/Turn\1 On/g
+        s/\bUse(s?) up\b/Use\1 Up/g
+        s/\bWait(s?) on\b/Wait\1 On/g
+        s/\bWake(s?) up\b/Wake\1 Up/g
+        
+        # Contractions such as "I ve" with apostrophes.
+        # Also handles the "´" character and replaces it with
+        # a simple single quote.
+        s/([[:alpha:]])'"['´]"'([[:upper:]])/\1'"'"'\l\2/g
+        
+        # First word:
+        s/^([^[:alnum:]]*)([[:alnum:]])/\1\u\2/
+        # Last word:
+        s/([[:alnum:]]*)([^[:alnum:]]*)$/\u\1\2/
+    ' <<< "${!k}"
+done
+
+exit 0

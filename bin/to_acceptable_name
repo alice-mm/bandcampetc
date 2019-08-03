@@ -1,0 +1,317 @@
+#!/usr/bin/env bash
+
+# stdin → stdout, remove weird stuff.
+# Idea and first lines inspired by the “abcde” CD-ripping script. ♥
+
+declare -ir MAX_LENGTH=255
+
+sed s,:,\ -,g \
+    | tr \ / __ \
+    | tr -d \"\?\[:cntrl:\] \
+    | tr "'"' #' '_' \
+    | tr -d ',;' \
+    | tr '~' '-' \
+    | tr '!' '_' \
+    | sed '
+        s/.*/\L&/g
+        s/’/_/g
+        s/_\+\.\([^.]*\)$/.\1/
+        s/.*/\L&/g
+        
+        s/…/.../g
+        s/@/at/g
+        
+        # Icelandic
+        s/ð/d/g
+        s/þ/th/g
+        
+        # Cyrillic
+        s/А/A/g
+        s/а/a/g
+        s/Ӓ/Ä/g
+        s/ӓ/ä/g
+        s/Ӓ̄/Ạ̈/g
+        s/ӓ̄/ạ̈/g
+        s/Ӑ/Ă/g
+        s/ӑ/ă/g
+        s/А̄/Ā/g
+        s/а̄/ā/g
+        s/Ӕ/Æ/g
+        s/ӕ/æ/g
+        s/А́/Á/g
+        s/а́/á/g
+        s/А̊/Å/g
+        s/а̊/å/g
+        s/Б/B/g
+        s/б/b/g
+        s/В/V/g
+        s/в/v/g
+        s/Г/G/g
+        s/г/g/g
+        s/Ѓ/Ǵ/g
+        s/ѓ/ǵ/g
+        s/Ғ/Ġ/g
+        s/ғ/ġ/g
+        s/Ҕ/Ğ/g
+        s/ҕ/ğ/g
+        s/Һ/Ḥ/g
+        s/һ/ḥ/g
+        s/Д/D/g
+        s/д/d/g
+        s/Ђ/Đ/g
+        s/ђ/đ/g
+        s/Е/E/g
+        s/е/e/g
+        s/Ӗ/Ĕ/g
+        s/ӗ/ĕ/g
+        s/Ё/Ë/g
+        s/ё/ë/g
+        s/Є/Ê/g
+        s/є/ê/g
+        s/Ж/Ž/g
+        s/ж/ž/g
+        s/Җ/Ž̦/g
+        s/җ/ž̦/g
+        s/Ӝ/Z̄/g
+        s/ӝ/z̄/g
+        s/Ӂ/Z̆/g
+        s/ӂ/z̆/g
+        s/З/Z/g
+        s/з/z/g
+        s/Ӟ/Z̈/g
+        s/ӟ/z̈/g
+        s/Ӡ/Ź/g
+        s/ӡ/ź/g
+        s/Ѕ/Ẑ/g
+        s/ѕ/ẑ/g
+        s/И/I/g
+        s/и/i/g
+        s/Ӣ/Ī/g
+        s/ӣ/ī/g
+        s/И́/Í/g
+        s/и́/í/g
+        s/Ӥ/Î/g
+        s/ӥ/î/g
+        s/Й/J/g
+        s/й/j/g
+        s/І/Ì/g
+        s/і/ì/g
+        s/Ї/Ï/g
+        s/ї/ï/g
+        s/І̄/Ǐ/g
+        s/і̄/ǐ/g
+        s/Ј/J̌/g
+        s/ј/ǰ/g
+        s/Ј̵/J́/g
+        s/ј̵/j́/g
+        s/К/K/g
+        s/к/k/g
+        s/Ќ/Ḱ/g
+        s/ќ/ḱ/g
+        s/Ӄ/Ḳ/g
+        s/ӄ/ḳ/g
+        s/Ҝ/K̂/g
+        s/ҝ/k̂/g
+        s/Ҡ/Ǩ/g
+        s/ҡ/ǩ/g
+        s/Ҟ/K̄/g
+        s/ҟ/k̄/g
+        s/Қ/K̦/g
+        s/қ/k̦/g
+        s/К̨/K̀/g
+        s/к̨/k̀/g
+        s/Ԛ/Q/g
+        s/ԛ/q/g
+        s/Л/L/g
+        s/л/l/g
+        s/Љ/L̂/g
+        s/љ/l̂/g
+        s/Ԡ/L̦/g
+        s/ԡ/l̦/g
+        s/М/M/g
+        s/м/m/g
+        s/Н/N/g
+        s/н/n/g
+        s/Њ/N̂/g
+        s/њ/n̂/g
+        s/Ң/N̦/g
+        s/ң/n̦/g
+        s/Ӊ/Ṇ/g
+        s/ӊ/ṇ/g
+        s/Ҥ/Ṅ/g
+        s/ҥ/ṅ/g
+        s/Ԋ/Ǹ/g
+        s/ԋ/ǹ/g
+        s/Ԣ/Ń/g
+        s/ԣ/ń/g
+        s/Ӈ/Ň/g
+        s/ӈ/ň/g
+        s/Н̄/N̄/g
+        s/н̄/n̄/g
+        s/О/O/g
+        s/о/o/g
+        s/Ӧ/Ö/g
+        s/ӧ/ö/g
+        s/Ө/Ô/g
+        s/ө/ô/g
+        s/Ӫ/Ő/g
+        s/ӫ/ő/g
+        s/Ӧ̄/Ọ̈/g
+        s/о̄̈/ọ̈/g
+        s/Ҩ/Ò/g
+        s/ҩ/ò/g
+        s/О́/Ó/g
+        s/о́/ó/g
+        s/О̄/Ō/g
+        s/о̄/ō/g
+        s/Œ/Œ/g
+        s/œ/œ/g
+        s/П/P/g
+        s/п/p/g
+        s/Ҧ/Ṕ/g
+        s/ҧ/ṕ/g
+        s/Ԥ/P̀/g
+        s/ԥ/p̀/g
+        s/Р/R/g
+        s/р/r/g
+        s/С/S/g
+        s/с/s/g
+        s/Ҫ/Ș/g
+        s/ҫ/ș/g
+        s/С̀/S̀/g
+        s/с̀/s̀/g
+        s/Т/T/g
+        s/т/t/g
+        s/Ћ/Ć/g
+        s/ћ/ć/g
+        s/Ԏ/T̀/g
+        s/ԏ/t̀/g
+        s/Т̌/Ť/g
+        s/т̌/ť/g
+        s/Ҭ/Ț/g
+        s/ҭ/ț/g
+        s/У/U/g
+        s/у/u/g
+        s/Ӱ/Ü/g
+        s/ӱ/ü/g
+        s/Ӯ/Ū/g
+        s/ӯ/ū/g
+        s/Ў/Ŭ/g
+        s/ў/ŭ/g
+        s/Ӳ/Ű/g
+        s/ӳ/ű/g
+        s/У́/Ú/g
+        s/у́/ú/g
+        s/Ӱ̄/Ụ̈/g
+        s/ӱ̄/ụ̈/g
+        s/Ү/Ù/g
+        s/ү/ù/g
+        s/Ұ/U̇/g
+        s/ұ/u̇/g
+        s/Ӱ̄/Ụ̄/g
+        s/ӱ̄/ụ̄/g
+        s/Ԝ/W/g
+        s/ԝ/w/g
+        s/Ф/F/g
+        s/ф/f/g
+        s/Х/H/g
+        s/х/h/g
+        s/Ҳ/H̦/g
+        s/ҳ/h̦/g
+        s/Ц/C/g
+        s/ц/c/g
+        s/Ҵ/C̄/g
+        s/ҵ/c̄/g
+        s/Џ/D̂/g
+        s/џ/d̂/g
+        s/Ч/Č/g
+        s/ч/č/g
+        s/Ҷ/C̦/g
+        s/ҷ/c̦/g
+        s/Ӌ/C̣/g
+        s/ӌ/c̣/g
+        s/Ӵ/C̈/g
+        s/ӵ/c̈/g
+        s/Ҹ/Ĉ/g
+        s/ҹ/ĉ/g
+        s/Ч̀/C̀/g
+        s/ч̀/c̀/g
+        s/Ҽ/C̆/g
+        s/ҽ/c̆/g
+        s/Ҿ/C̨̆/g
+        s/ҿ/c̨̆/g
+        s/Ш/Š/g
+        s/ш/š/g
+        s/Щ/Ŝ/g
+        s/щ/ŝ/g
+        s/Ъ/ʺ/g
+        s/ъ/ʺ/g
+        s/Ы/Y/g
+        s/ы/y/g
+        s/Ӹ/Ÿ/g
+        s/ӹ/ÿ/g
+        s/Ы̄/Ȳ/g
+        s/ы̄/ȳ/g
+        s/Ь/ʹ/g
+        s/ь/ʹ/g
+        s/Э/È/g
+        s/э/è/g
+        s/Ә/A̋/g
+        s/ә/a̋/g
+        s/Ӛ/À/g
+        s/ӛ/à/g
+        s/Ю/Û/g
+        s/ю/û/g
+        s/Ю̄/Û̄/g
+        s/ю̄/û̄/g
+        s/Я/Â/g
+        s/я/â/g
+        s/Ґ/G̀/g
+        s/ґ/g̀/g
+        s/Ѣ/Ě/g
+        s/ѣ/ě/g
+        s/Ѫ/Ǎ/g
+        s/ѫ/ǎ/g
+        s/Ѳ/F̀/g
+        s/ѳ/f̀/g
+        s/Ѵ/Ỳ/g
+        s/ѵ/ỳ/g
+    ' | iconv -f utf8 -t ascii//TRANSLIT | sed -r '
+        s/[^[:alnum:]._-]/_/g
+        s/__+/_/g
+        
+        # Trailing underscores before extension.
+        s/_(\.[^.]*)$/\1/
+        
+        # Leading underscores.
+        s/^_+//
+        
+        # Trailing underscores with no extension, or in it.
+        s/_+$//
+        
+        # Prevent files from becoming hidden files.
+        s/^\./_./
+        
+        # Avoid empty names.
+        s/^$/_/
+        
+        # Length (keep extension, though).
+        ## looong.abcdefg
+        s/^(.{'"$((MAX_LENGTH - 8))"'}).+\.([^.]{7})$/\1.\2/
+        ## looong.abcdef
+        s/^(.{'"$((MAX_LENGTH - 7))"'}).+\.([^.]{6})$/\1.\2/
+        ## looong.abcde
+        s/^(.{'"$((MAX_LENGTH - 6))"'}).+\.([^.]{5})$/\1.\2/
+        ## looong.abcd
+        s/^(.{'"$((MAX_LENGTH - 5))"'}).+\.([^.]{4})$/\1.\2/
+        ## looong.abc
+        s/^(.{'"$((MAX_LENGTH - 4))"'}).+\.([^.]{3})$/\1.\2/
+        ## looong.ab
+        s/^(.{'"$((MAX_LENGTH - 3))"'}).+\.([^.]{2})$/\1.\2/
+        ## looong.a
+        s/^(.{'"$((MAX_LENGTH - 2))"'}).+\.([^.]{1})$/\1.\2/
+        ## looong.
+        s/^(.{'"$((MAX_LENGTH - 1))"'}).+\.$/\1./
+        ## looong
+        s/^(.{'"$((MAX_LENGTH))"'}).+$/\1/
+    '

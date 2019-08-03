@@ -1,0 +1,221 @@
+#!/usr/bin/env bash
+
+# Last (tiny) modification: 2019y02m21d
+
+# Starting with given directories, look for every directory and, for those
+# who contain at least one MP3 or FLAC file, try to find an album cover and
+# save it alongside the music file(s).
+
+# Args  Starting directory, or several directories. Passed to "find".
+
+# WARNING: For better results, check the MMETA variable below; it should
+# point to my script, which uses eyeD3 and metaflac to retrieve the artist's
+# name and the album's title.
+
+# If both mmeta and metaflac are found, FLAC files
+# can be used in addition to MP3s.
+
+
+# Look for jpgs with a given Wikipedia URL.
+function get_wiki {
+    wget "$1" -qO '-' \
+            | grep -o '//[^",]*\.jpg' \
+            | grep -vFm 1 '/thumb/' \
+            | sed 's/^/https:/'
+}
+
+
+# The filename that will be used for the covers.
+COVER_BASENAME='cover.jpg'
+# A filename used for a lighter version of the cover.
+# Leave empty if you do not wish to create those additional files.
+COVER_LQ_BASENAME='cover_lq.jpg'
+
+LQCOVER=$(which create-lq-cover)
+
+MMETA=$(which mmeta)
+if [ ! -x "$MMETA" ]
+then
+    echo "$(basename "$0"): Warning: Disabling ID retrieval. Check MMETA in the script. Maybe you need to download my script “mmeta”." >&2
+    MMETA=''
+fi
+
+METAFLAC="$(which metaflac)"
+
+if [ $# -eq 0 ]
+then
+    echo "$(basename "$0"): Missing arguments. Please give at least one directory as first argument." >&2
+    exit 1
+fi
+
+
+nb_ok=0
+
+echo "Scanning from:$(
+    for ((k = 1;  k <= "$#";  k++))
+    do
+        echo -n " \"${!k}\""
+    done
+)"
+
+# See end of loop. List of directories. Using a pipe would spawn a subshell
+# and prevent me from properly counting with "nb_ok".
+# Note that directories
+while read -rd '' dir
+do
+    echo
+    
+    # Weird things may happen if there are dirs with newlines in their names.
+    # Let's just ignore them. I don't want to encourage people to give horrible
+    # names to their music directories.
+    if [ ! -d "$dir" ]
+    then
+        echo "$(basename "$0"): Warning: \"$dir\" not found. Skipping." >&2
+        continue
+    fi
+    
+    # Removing trailing slash to make echoes more pretty (no "a//b").
+    dir="$(sed 's%/\+$%%' <<< "$dir")"
+    
+    echo "Directory:"$'\t'"\"$dir\""
+    
+    cover="$(find "$dir" -maxdepth 1 -type f -iregex '.*\.jpe?g$' -print -quit)"
+    if [ "$cover" ]
+    then
+        echo "Found “$cover”. Skipping directory."
+        continue
+    fi
+    
+    # First mp3 found, kinda random, and case insensitive. I have "MP3"s instead
+    # of "mp3"s in my own files, somewhere, and I don't even know why.
+    file="$(find "$dir" -maxdepth 1 -type f -iname '*.mp3' -print -quit)"
+    
+    if [ ! "$file" -a "$MMETA" -a "$METAFLAC" ]
+    then
+        file="$(find "$dir" -maxdepth 1 -type f -iname '*.flac' -print -quit)"
+        type='flac'
+    else
+        type='mp3'
+    fi
+    
+    if [ ! "$file" ]
+    then
+        echo "No MP3 or FLAC file."
+        continue
+    fi
+    echo "Examined file:"$'\t'"\"$(basename "$file")\""
+    
+    # Sometimes, especially with abcde, the MusicBrainz ID is already available
+    # in the metadata.
+    id="$(
+        if [ "$type" = 'mp3' ]
+        then
+            eyeD3 --no-color "$file" 2> /dev/null \
+                    | grep -aA 1 -m 1 'musicbrainz_albumid\|MusicBrainz Album Id' \
+                    | tail -1
+        fi
+    )"
+    
+    if [ "$MMETA" -a ! "$id" ]
+    then
+        # We will have to look for the ID on the Internet...
+        query_url="$("$MMETA" 'https://musicbrainz.org/search?query=%a+%A&type=release' "$file")"
+        echo "Looking for the release via \"${query_url}\"..."
+        
+        #details_url="$(wget -qO '-' "$query_url" | grep -om 1 'https\?://[^"]*/release/[^"]*' | head -1)"'/details'
+        #echo "Looking for the MBID in ${details_url}..."
+        #id="$(wget -qO '-' "$details_url" | sed -n 's/.*<code>\(.*\)<\/code>.*/\1/p')"
+        
+        # We perform a search, get the first result's release URL, and extract the ID from it.
+        id="$(
+            wget -qO '-' "$query_url" \
+                    | grep -om 1 'href="/release/[^"]*' \
+                    | head -1 \
+                    | sed 's@.*/release/\(.*\)@\1@'
+        )"
+    fi
+    
+    if [ ! "$id" ]
+    then
+        echo "Could not find ID."
+    else
+        echo "ID:"$'\t'"$id"
+        json_url='coverartarchive.org/release/'"$id"
+        echo "Trying \"${json_url}\"..."
+        json="$(wget "$json_url" -qO '-')"
+        # I usually don't use echo for this, but the JSON data appears
+        # to end without a newline, and echo adds it. I guess.
+        url="$(echo "$json" | grep -om 1 '"http://[^"]*\.jpg"' | head -1 | tr -d '"')"
+    fi
+    
+    if [ "$MMETA" -a -z "$url" ]
+    then
+        # Perform a search on Wikipedia with:
+        # "album_name (artist_name album)".
+        album_title="$("$MMETA" '%A' "$file")"
+        artist_name="$("$MMETA" '%a' "$file")"
+        release_page='https://en.wikipedia.org/w/index.php?search='"${album_title} (${artist_name}"' album)&title=Special%3ASearch'
+        echo "Trying Wikipedia search \"${album_title} (${artist_name} album)\"..."
+        url="$(get_wiki "$release_page")"
+    fi
+    
+    if [ "$MMETA" -a -z "$url" ]
+    then
+        # Perform a search on Wikipedia with:
+        # "album_name (album)".
+        release_page='https://en.wikipedia.org/w/index.php?search='"$album_title"' (album)&title=Special%3ASearch'
+        echo "Trying Wikipedia search \"${album_title} (album)\"..."
+        url="$(get_wiki "$release_page")"
+    fi
+    
+    if [ -z "$url" -a "$id" ]
+    then
+        # Sometimes, the cover does not seem to be approved by MusicBrainz but
+        # there can still be a jpg file somewhere in the release page.
+        release_page='https://musicbrainz.org/release/'"$id"
+        echo "Trying \"${release_page}\"..."
+        url="$(
+            wget "$release_page" -qO '-' \
+                    | grep -om 1 '"https\?://[^"]*\.jpg"' \
+                    | head -1 | tr -d '"'
+        )"
+    fi
+    
+    if [ "$MMETA" -a ! "$url" ]
+    then
+        # Another try on Wikipedia, without the "(album)" part in the query.
+        release_page='https://en.wikipedia.org/w/index.php?search='"$album_title"'&title=Special%3ASearch'
+        echo "Trying Wikipedia search \"${album_title}\"..."
+        url="$(get_wiki "$release_page")"
+    fi
+    
+    if [ ! "$url" ]
+    then
+        echo "Could not find any cover. Skipping."
+        continue
+    fi
+    
+    echo "Downloading cover: \"${url}\"..."
+    cover="$dir"/"$COVER_BASENAME"
+    
+    if ! wget "$url" -qO "$cover"
+    then
+        echo "Error? ($?)" >&2
+    fi
+    
+    if [ -s "$cover" ]
+    then
+        "$LQCOVER" "$cover" "$COVER_LQ_BASENAME" &&
+        ((nb_ok++))
+    else
+        echo "The resulting file is empty. Deleting..."
+        rm -v "$cover"
+    fi
+done < <(find "$@" -type d -print0)
+
+echo
+echo "${nb_ok} covers fetched."
+
+echo "End of $(basename "$0")"
+
+exit 0

@@ -1,5 +1,230 @@
 # Bandcamp, etc. (`bandcampetc`)
+:toc:
 
 Scripts to keep music tidy. The main one extracts and cleans files from Bandcamp and Amazon Music downloads.
 
-# Work in progress! Need to gather and clean old scripts of mine.
+
+# Getting started
+
+## Execution
+
+Add the `bin/` directory to your `PATH` to be able to run these scripts from everywhere.
+
+.`~/.bashrc`
+[source, bash]
+--
+PATH+=':~/bin/bandcampetc/bin/'
+export PATH
+--
+
+WARNING: Make sure you adapt the `~/bin/bandcampetc/bin/` path of the example according to where you saved this project.
+
+
+## Dependencies
+
+The `bandcamp` script relies, directly or not, on:
+
+[horizontal]
+`eyeD3`::       Manipulate MP3 metadata. Note that the software’s package is generally called `eyed3`.
+
+`metaflac`::    Manipulate FLAC metadata.
+
+`rsync`::       “A fast, versatile, remote (and local) file-copying tool.”
+
+`unzip`::       Decompress ZIP archives.
+
+`identify`::    Get info on pictures. (_ImageMagick_)
+
+`convert` / `mogrify`:: Convert pictures. (_ImageMagick_)
+
+`awk`::         “Pattern scanning and processing language.” GNU’s `gawk` implementation recommended, but `mawk` should be enough.
+
+`geany`::       … as a recommended simple text editor to revise music metadata. You can use another editor by changing a constant’s value in `bandcamp`.
+
+WARNING: Avoid using an overly old version of Bash. Associative arrays came up in v4 or something.
+
+
+# Contents
+
+## `bandcamp`
+
+The main script, at least from my point of view. When you download music from Bandcamp, Amazon Music, etc., you generally end up with a random ZIP archive full of poorly named files. Furthermore, the music’s metadata is often dirty as well: some labels add random information (sometimes even catalogue numbers!) in the tracks’ titles and so on.
+
+This script can be run from anywhere (it has no importance) and has currently no need for arguments.
+
+1. It will look for ZIPs in `~/Downloads/` and `~/Téléchargements/`.
+2. For each ZIP that contains MP3 or FLAC files, the files will be extracted.
+3. You will be offered the possibility to edit the music’s metadata in a text editor.
+4. The files will be tagged and named according to the cleaned version of the metadata.
+5. If the album is in FLAC format and if the `CONVERT_TO_MP3` constant has been set to a non empty value, an MP3 version of the record will be generated alongside the FLAC version.
+6. The original ZIP will be discarded.
+
+
+## `capitasong`
+
+Try to put capital letters in nice places in song and record titles. This is not perfect, of course, but this script provides a good starting point for metadata cleaning.
+
+[source, bash]
+--
+    $ capitasong "You will blow up a dog some day, as the other guy said"
+You Will Blow Up a Dog Some Day, as the Other Guy Said
+
+    $ capitasong "Le chien de ta mère est gros"
+Le Chien de Ta Mère Est Gros
+--
+
+INFO: Many conventions exist. I used stuff from http://aitech.ac.jp/~ckelly/midi/help/caps.html. (That weird link might become dead or point to something unrelated someday. Use with caution.)
+
+
+## `covers`
+
+Try to fetch cover arts from various sources. An old ugly script of mine. Don’t pay it too much attention. Most album downloads already contain a cover anyway, so this is seldom called.
+
+
+## `setcover`
+
+I like to add the cover art in the music files’ metadata. This way, even devices such as cars with no Internet access or whatever are able to display cover arts when playing music. The `setcover` script embed a cover art in MP3 and FLAC files:
+
+```
+setcover: Syntax to tag FILE with PICTURE:
+    setcover FILE PICTURE
+Give an empty string for PICTURE to remove covers.
+Note that any previous picture will be removed either way.
+If FILE is a directory, FILE/*.mp3 and FILE/*.MP3 will be targeted.
+If "metaflac" is installed, FLAC files will also be processed.
+```
+
+
+## `create-lq-cover`
+
+To prevent art addition (see `setcover`) from making my files oversized, I use a low-quality version of it. The `create-lq-cover` script simply creates lightweight pictures from a given original version.
+
+
+## `mmeta`
+
+Used to be able to display metadata from MP3 and FLAC files using the same command. This uses homemade pattern strings.
+
+```
+    $ mmeta '\n%f\n%a, “%t” [%l, %s]\n\t(“%A”, %y, %g)\n\n' ./{salvation,eternal_kingdom/*}/1*
+
+./salvation/1_-_echoes.mp3
+Cult of Luna, “Echoes” [59:09, 13.50 MB]
+	(“Salvation”, 2004, Post-Metal)
+
+
+./eternal_kingdom/flac/10_-_following_betulas.flac
+Cult of Luna, “Following Betulas” [Unknown, Unknown]
+	(“Eternal Kingdom”, 2008, Post-metal)
+```
+
+See `mmeta -h` for help.
+
+
+## `to_acceptable_name`
+
+I _love_ this one. It eats a string and gives a version of it devoid of weird characters. I use it to rename all my music files. Since I buy obscure black metal and stuff, I had to update it to roughly transliterate Cyrillic and Icelandic. It still can’t handle Japanese properly, though. Sorry.
+
+```
+    $ to_acceptable_name <<< "@Œӂ (%s/) «¼___.flac"
+atoez_s_1_4.flac
+```
+
+TIP: This script also cuts https://elaltardelholocausto.bandcamp.com/album/i-t[long file names] to 255{nbsp}characters to avoid errors, while trying to keep the file’s extension.
+
+
+## `give_acceptable_name`
+
+Use `to_acceptable_name` to find a suitable name for a file, and rename that file using that name. I like to add this as a custom action in my file manager. Typically, in Thunar:
+
+```
+give_acceptable_name %F
+```
+
+(“Edit” → “Configure custom actions…”) (Remember to check that the “Appearance Conditions” are broad enough.)
+
+
+# Unit tests
+
+I love trying to do unit testing in Bash. Just run `./run_tests.sh` and a bunch of commands will be executed. The first failure stops the execution (`set -e`) and you should be able to see what failed in the output.
+
+If everything works as intended, the output should end with:
+
+```
+run_tests.sh: All done.
+```
+
+
+# Sample execution of `bandcamp`
+
+With one ZIP from https://giftsfromenola.bandcamp.com/album/from-fathoms in `~/Downloads/`:
+
+```
+    $ bandcamp 
+bandcamp: Inspecting “/home/alice/Downloads/Gifts\ From\ Enola\ -\ From\ Fathoms.zip”...
+Archive:  ./Gifts From Enola - From Fathoms.zip
+ extracting: Gifts From Enola - From Fathoms - 01 Benthos.flac  
+ extracting: Gifts From Enola - From Fathoms - 02 Weightless Frame.flac  
+ extracting: Gifts From Enola - From Fathoms - 03 Weightless Thought.flac  
+ extracting: Gifts From Enola - From Fathoms - 04 Trieste.flac  
+ extracting: Gifts From Enola - From Fathoms - 05 Resurface.flac  
+ extracting: Gifts From Enola - From Fathoms - 06 Melted Wings.flac  
+ extracting: Gifts From Enola - From Fathoms - 07 Thawed Horizon.flac  
+ extracting: Gifts From Enola - From Fathoms - 08 Aves.flac  
+ extracting: cover.jpg               
+
+  ╭────────────────────────────────────────────╌╌┄┄┈┈
+  │ Type:    flac
+  │ Artist:  Gifts from Enola
+  │ Album:   “From Fathoms”
+  ╰────────────────────────────────────────────╌╌┄┄┈┈
+
+  [Here, my editor was launched and I set the genre as “Post-rock” before closing it.]
+
+bandcamp: Track 01 of 08...
+bandcamp: Track 02 of 08...
+bandcamp: Track 03 of 08...
+bandcamp: Track 04 of 08...
+bandcamp: Track 05 of 08...
+bandcamp: Track 06 of 08...
+bandcamp: Track 07 of 08...
+bandcamp: Track 08 of 08...
+bandcamp: Found cover: cover.jpg
+ HQ → “cover.jpg” (3,5M)
+ LQ → “./cover_lq.jpg” (resize: 512×512; quality: 85) (112K)
+'cover.jpg' -> 'gifts_from_enola/from_fathoms/flac/cover.jpg'
+'cover_lq.jpg' -> 'gifts_from_enola/from_fathoms/flac/cover_lq.jpg'
+removed 'cover.jpg'
+removed 'cover_lq.jpg'
+bandcamp: Applying “gifts_from_enola/from_fathoms/flac/cover_lq.jpg” to files...
+bandcamp: Renaming files...
+  “Gifts\ From\ Enola\ -\ From\ Fathoms\ -\ 01\ Benthos.flac” → “1_-_benthos.flac”
+  “Gifts\ From\ Enola\ -\ From\ Fathoms\ -\ 02\ Weightless\ Frame.flac” → “2_-_weightless_frame.flac”
+  “Gifts\ From\ Enola\ -\ From\ Fathoms\ -\ 03\ Weightless\ Thought.flac” → “3_-_weightless_thought.flac”
+  “Gifts\ From\ Enola\ -\ From\ Fathoms\ -\ 04\ Trieste.flac” → “4_-_trieste.flac”
+  “Gifts\ From\ Enola\ -\ From\ Fathoms\ -\ 05\ Resurface.flac” → “5_-_resurface.flac”
+  “Gifts\ From\ Enola\ -\ From\ Fathoms\ -\ 06\ Melted\ Wings.flac” → “6_-_melted_wings.flac”
+  “Gifts\ From\ Enola\ -\ From\ Fathoms\ -\ 07\ Thawed\ Horizon.flac” → “7_-_thawed_horizon.flac”
+  “Gifts\ From\ Enola\ -\ From\ Fathoms\ -\ 08\ Aves.flac” → “8_-_aves.flac”
+bandcamp: Moving the files to “/home/alice/Music/gifts_from_enola/from_fathoms“...
+bandcamp: All done for this zip.
+removed '/home/alice/Downloads/Gifts From Enola - From Fathoms.zip'
+
+bandcamp: End.
+
+    $ tree ~/Music/gifts_from_enola/
+/home/alice/Music/gifts_from_enola/
+└── from_fathoms
+    └── flac
+        ├── 1_-_benthos.flac
+        ├── 2_-_weightless_frame.flac
+        ├── 3_-_weightless_thought.flac
+        ├── 4_-_trieste.flac
+        ├── 5_-_resurface.flac
+        ├── 6_-_melted_wings.flac
+        ├── 7_-_thawed_horizon.flac
+        ├── 8_-_aves.flac
+        ├── cover.jpg
+        └── cover_lq.jpg
+
+2 directories, 10 files
+```

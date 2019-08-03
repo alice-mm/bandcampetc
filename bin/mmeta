@@ -1,0 +1,177 @@
+#! /usr/bin/env bash
+
+# Last modification: 2018y12m04d (added options for help and empty placeholder).
+
+# Display information found in MP3 tags, using eyeD3 or whatever is set using
+# the variable below.
+
+PROG=eyeD3
+OPTNS='--no-color'
+PLACEHOLDER='Unknown'
+
+function usage {
+    bold="$(tput bold)"
+    normal="$(tput sgr0)"
+    
+    cat << _HELP_
+
+  Basic script to retrieve music metadata, mostly for MP3.
+
+ ${bold}Usage:${normal}
+    $(printf '%q' "$(basename "$0")") [-e] PATTERN file_1 … file_k
+    $(printf '%q' "$(basename "$0")") -h
+
+    ${bold}-e${normal}   Allow empty output instead of using a placeholder like “Unknown”.
+    ${bold}-h${normal}   Display this help blurb.
+
+ PATTERN is a format string in which replacements will occur:
+    ${bold}%a${normal}   Artist.
+    ${bold}%t${normal}   Title.
+    ${bold}%A${normal}   Album title.
+    ${bold}%T${normal}   Track number; might be “k/n” or just “k”.
+    ${bold}%f${normal}   Filename, as provided in the arguments list.
+    ${bold}%l${normal}   Length (format: “mm:ss”).
+    ${bold}%g${normal}   Genre.
+    ${bold}%y${normal}   Year (usually four digits).
+    ${bold}%s${normal}   Size of the file, in a human-readable form.
+    ${bold}\n${normal}   Newline.
+    ${bold}\t${normal}   Horizontal tabulation.
+
+ ${bold}Pattern example:${normal}
+    '%a - %t\t(%A)\n' --> 'Deep Purple - Child in Time<TAB>(In Rock)'
+
+ ${bold}Exit status:${normal}
+    ${bold}0${normal}    if everything is OK,
+    ${bold}1${normal}    if the ID3 tags program is not found,
+    ${bold}2${normal}    if no argument was provided,
+    ${bold}3${normal}    if no file was provided (only one argument),
+    ${bold}10+n${normal} if ${bold}n${normal} files were not found or readable. This gets stuck at 255.
+
+ ${bold}FLAC support:${normal}
+    If ${bold}metaflac${normal} is installed, a few things can be retrieved from FLAC files as well.
+
+ ${bold}Bug:${normal}
+    If the metadata contains something like “%s”,
+    unwanted substitution might occur in it, because the replacements are
+    performed successively, in a slightly naive way.
+
+_HELP_
+}
+
+
+# Read lines on stdin and replace empty ones with the contents of PLACEHOLDER.
+# If no line is read, a single PLACEHOLDER is echoed.
+function replace_if_empty {
+    something=''
+    while read -rd $'\n' line
+    do
+        test "$line" && echo "$line" || echo "$PLACEHOLDER"
+        something=1
+    done
+    test "$something" || echo "$PLACEHOLDER"
+}
+
+
+# Add a backslash before some characters to prevent sed from interpreting
+# them in a weird way.
+function escape_stuff {
+    sed 's/\([\&'$'\t''/]\)/\\\1/g'
+}
+
+
+if [ ! "$(which "$PROG")" ]
+then
+    echo "$(basename "$0"): Error: Program \"$PROG\" not found." >&2
+    exit 1
+fi
+
+
+if [ "$#" -eq 0 ]
+then
+    echo "$(basename "$0"): Error: No argument provided." >&2
+    echo >&2
+    usage
+    exit 2
+fi
+
+
+OPTIND=1
+while getopts 'eh' opt
+do
+    case "$opt" in
+        h)
+            usage
+            exit 0
+            ;;
+        e)
+            unset -v PLACEHOLDER
+            ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+
+if [ "$#" -eq 1 ]
+then
+    echo "$(basename "$0"): Error: No file provided." >&2
+    echo >&2
+    usage
+    exit 3
+fi
+
+
+status=0
+
+
+for ((k = 2;  k <= "$#";  k++))
+do
+    f="${!k}"
+    
+    if [ ! -r "$f" ]
+    then
+        echo "$(basename "$0"): Error: \"$f\" cannot be found or read." >&2
+        test "$status" -eq 0 && status=10
+        test "$status" -lt 255 && ((status++))
+        continue
+    fi
+    
+    if [ "$(grep -i '\.flac' <<< "$f")" ]
+    then
+        # Looks like a flac file. Let's try to retrieve Vorbis comments.
+        #       "    comment[0]: ARTIST=artist name"
+        # -->   "artist: artist name"
+        data="$(metaflac --list "$f" | grep '[[:space:]]*comment\[' | sed 's/[^:]*: \([^=]\+\)=\(.*\)/\L\1\E: \2/')"
+    else
+        # Should be a mp3 file.
+        data="$("$PROG" $OPTNS "$f" 2> /dev/null | tr '\t' '\n')"
+    fi
+    
+    # The "t l; d; :l; q" part is a conditional branching allowing us to quit
+    # at the first match. "l" is the label name. This is important because
+    # there might be weird comments in the metadata, at the end of the data.
+    a="$(sed -n 's/^[Aa]rtist: //p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)"
+    t="$(sed -n 's/^[Tt]itle: //p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)"
+    A="$(sed -n 's/^[Aa]lbum: //p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)"
+    T="$(sed -n 's/^[Tt]rack\(number\)\?: //p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)"
+    l="$(sed -n 's/^[Tt]ime: //p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)"
+    g="$(sed -n 's/^[Gg]enre: \([^(]*\)\( (.*)\)\?/\1/p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)"
+    y="$(sed -n 's/^\([Yy]ear\|[Dd]ate\): //p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)"
+    s="$(sed -n 's/^\[ \([^]]*\) \]$/\1/p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)"
+    f="$(escape_stuff <<< "$f")"
+    
+    sed "
+        s/%a/$a/g
+        s/%t/$t/g
+        s/%A/$A/g
+        s/%T/$T/g
+        s/%l/$l/g
+        s/%g/$g/g
+        s/%y/$y/g
+        s/%s/$s/g
+        s/%f/$f/g"'
+        s/\\t/'$'\t''/g
+        s/\\n/\'$'\n''/g
+    ' <<< "$1" | head -c -1
+done
+
+exit "$status"
