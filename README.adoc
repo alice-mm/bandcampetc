@@ -1,2 +1,5 @@
-# bandcampetc
+# Bandcamp, etc. (`bandcampetc`)
+
 Scripts to keep music tidy. The main one extracts and cleans files from Bandcamp and Amazon Music downloads.
+
+# Work in progress! Need to gather and clean old scripts of mine.
