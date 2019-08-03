@@ -1,7 +1,7 @@
 # Bandcamp, etc. (`bandcampetc`)
 :toc:
 
-Scripts to keep music tidy. The main one extracts and cleans files from Bandcamp and Amazon Music downloads.
+Scripts to keep music tidy. The main one extracts and cleans files from https://bandcamp.com/[Bandcamp] and Amazon Music downloads.
 
 
 # Getting started
