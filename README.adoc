@@ -35,7 +35,9 @@ The `bandcamp` script relies, directly or not, on:
 
 `identify`::    Get info on pictures. (_ImageMagick_)
 
-`convert` / `mogrify`:: Convert pictures. (_ImageMagick_)
+`convert` and `mogrify`:: Convert pictures. (_ImageMagick_)
+
+`ffmpeg` or `avconv`::  For FLAC → MP3 conversions.
 
 `awk`::         “Pattern scanning and processing language.” GNU’s `gawk` implementation recommended, but `mawk` should be enough.
 
@@ -124,13 +126,14 @@ See `mmeta -h` for help.
 
 I _love_ this one. It eats a string and gives a version of it devoid of weird characters. I use it to rename all my music files. Since I buy obscure black metal and stuff, I had to update it to roughly transliterate Cyrillic and Icelandic. It still can’t handle Japanese properly, though. Sorry.
 
-```
+[source, bash]
+--
     $ to_acceptable_name <<< "@Œӂ (%s/) «¼___.flac"
 atoez_s_1_4.flac
 
     $ to_acceptable_name <<< '円423 for you.MP3'
 423_yens_for_you.mp3
-```
+--
 
 TIP: This script also cuts https://elaltardelholocausto.bandcamp.com/album/i-t[long file names] to 255{nbsp}characters to avoid errors, while trying to keep the file’s extension.
 
@@ -144,6 +147,47 @@ give_acceptable_name %F
 ```
 
 (“Edit” → “Configure custom actions…”) (Remember to check that the “Appearance Conditions” are broad enough.)
+
+
+# Configuration of the `bandcamp` script
+
+## Converting FLAC files to MP3s
+
+To get both a FLAC and an MP3 version of your records, check the part of `bin/bandcamp` that looks like this:
+
+[source, bash]
+--
+# Set to non empty value to convert FLAC files to MP3.
+# I used to keep everything in both formats, and then ran out of space.
+# Now I convert to MP3 on the fly when putting music on my phone or whatever.
+readonly CONVERT_TO_MP3=''
+#readonly CONVERT_TO_MP3=1
+--
+
+Uncomment `readonly CONVERT_TO_MP3=1` and comment or remove the `readonly CONVERT_TO_MP3=''` line to turn the feature on.
+
+
+## Editor
+
+To choose the text editor used to edit music metadata, check the part of `bin/bandcamp` that looks like this:
+
+[source, bash]
+--
+# EDITOR is an editor command with options, in an indexed array.
+# Example: EDITOR=(geany --new-instance)
+# Make sure the command is blocking. The script should wait until
+# you close the editor. Hence the fact that I use Geany’s “-i” option,
+# to prevent it from using an existing instance.
+
+unset -v EDITOR
+#readonly EDITOR=(nano -S)
+#readonly EDITOR=(vi)
+readonly EDITOR=(geany -i)
+--
+
+The commented out lines give you examples for other editors than Geany.
+
+NOTE: I use an indexed array rather than a dumb string to make the script more robust: you can use parameters that contain spaces: `readonly EDITOR=(foo -f 'bar plop' -M)`.
 
 
 # Unit tests
