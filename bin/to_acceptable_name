@@ -5,7 +5,22 @@
 
 declare -ir MAX_LENGTH=255
 
-sed s,:,\ -,g \
+{
+    unset -v found_something
+    while IFS='' read -r line
+    do
+        if [ "$line" ]
+        then
+            printf '%s\n' "$line"
+            found_something=1
+        fi
+    done
+    
+    if [ ! "$found_something" ]
+    then
+        echo '_'
+    fi
+} | sed s,:,\ -,g \
     | tr \ / __ \
     | tr -d \"\?\[:cntrl:\] \
     | tr "'"' #' '_' \
@@ -20,6 +35,19 @@ sed s,:,\ -,g \
         
         s/…/.../g
         s/@/at/g
+        
+        # Money
+        s/\([0-9]\)\$/\1_dollars/g
+        s/\$\([0-9.,-]\+\)/\1_dollars/g
+        s/\$/dollars/g
+        
+        s/\([0-9]\)€/\1_euros/g
+        s/€\([0-9.,-]\+\)/\1_euros/g
+        s/€/euros/g
+        
+        s/\([0-9]\)[¥円]/\1_yens/g
+        s/[¥円]\([0-9.,-]\+\)/\1_yens/g
+        s/[¥円]/yens/g
         
         # Icelandic
         s/ð/d/g

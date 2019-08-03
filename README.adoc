@@ -127,6 +127,9 @@ I _love_ this one. It eats a string and gives a version of it devoid of weird ch
 ```
     $ to_acceptable_name <<< "@Œӂ (%s/) «¼___.flac"
 atoez_s_1_4.flac
+
+    $ to_acceptable_name <<< '円423 for you.MP3'
+423_yens_for_you.mp3
 ```
 
 TIP: This script also cuts https://elaltardelholocausto.bandcamp.com/album/i-t[long file names] to 255{nbsp}characters to avoid errors, while trying to keep the file’s extension.
