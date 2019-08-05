@@ -43,22 +43,27 @@ function f_gettype {
 # $2    A picture to be used as a FRONT_COVER, or an empty string if the
 #       images must be removed from the file.
 function f_tag {
-    echo "$(basename "$0"): Removing images from \"$1\"..."
-    eyeD3 --no-color --remove-images "$1" 2>&1 > /dev/null | sed 's/^/eyeD3: /' \
-            && echo "OK" \
-            || {
-                echo "Error? ($?)"
-                ((glob_errors++))
-            }
+    printf '%s: Removing images from “%s”...\n' "$(basename "$0")" "$1"
+    
+    if eyeD3 --no-color --remove-images "$1" 2>&1 > /dev/null | sed 's/^/eyeD3: /'
+    then
+        echo "OK"
+    else
+        echo "Error? ($?)"
+        ((glob_errors++))
+    fi
+    
     if [ "$2" ]
     then
-        echo "$(basename "$0"): \"$2\" --> \"$1\"..."
-        eyeD3 --no-color --add-image="$2":FRONT_COVER "$1" 2>&1 > /dev/null | sed 's/^/eyeD3: /' \
-                && echo "OK" \
-                || {
-                    echo "Error? ($?)"
-                    ((glob_errors++))
-                }
+        printf '%s: “%s” → “%s”...\n' "$(basename "$0")" "$2" "$1"
+        
+        if eyeD3 --no-color --add-image="$2":FRONT_COVER "$1" 2>&1 > /dev/null | sed 's/^/eyeD3: /'
+        then
+            echo "OK"
+        else
+            echo "Error? ($?)"
+            ((glob_errors++))
+        fi
     fi
 }
 
@@ -67,7 +72,7 @@ function f_tag {
 # $2    A picture to be used as a FRONT_COVER, or an empty string if the
 #       images must be removed from the file.
 function f_tag_flac {
-    echo "$(basename "$0"): Removing images from \"$1\"..."
+    printf '%s: Removing images from “%s”...\n' "$(basename "$0")" "$1"
     
     # For all block numbers coresponding to front covers.
     nb_removed=0
@@ -75,10 +80,10 @@ function f_tag_flac {
     do
         metaflac --dont-use-padding --remove --block-number="${block_num}" "$1" 2>&1 > /dev/null \
                 | sed 's/^/metaflac: /'
-        status_metaflac="$?"
+        status_metaflac=$?
         if [ "$status_metaflac" -eq 0 ]
         then
-            echo "OK"
+            echo 'OK'
             ((nb_removed++))
         else
             echo "Error? ($?)"
@@ -97,17 +102,16 @@ function f_tag_flac {
                 | grep -x '[0-9]\+'
     )
     
-    echo "$(basename "$0"): Removed ${nb_removed} image(s) using metaflac."
-    
     if [ "$2" ]
     then
-        echo "$(basename "$0"): \"$2\" --> \"$1\"..."
-        metaflac --import-picture-from "$2" "$1" 2>&1 > /dev/null | sed 's/^/metaflac: /' \
-                && echo "OK" \
-                || {
-                    echo "Error? ($?)"
-                    ((glob_errors++))
-                }
+        printf '%s: “%s” → “%s”...\n' "$(basename "$0")" "$2" "$1"
+        if metaflac --import-picture-from "$2" "$1" 2>&1 > /dev/null | sed 's/^/metaflac: /'
+        then
+            echo 'OK'
+        else
+            echo "Error? ($?)"
+            ((glob_errors++))
+        fi
     fi
 }
 
@@ -115,7 +119,9 @@ function f_tag_flac {
 # $1    Target.
 # $2    Picture.
 function f_single_file {
-    type="$(f_gettype "$1")"
+    local type
+    
+    type=$(f_gettype "$1")
     
     if [ ! "$type" ]
     then
