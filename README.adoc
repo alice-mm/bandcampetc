@@ -50,8 +50,6 @@ On Ubuntu and Debian machines, this should be enough to get everything:
 $ sudo apt-get install eyed3 flac rsync unzip imagemagick gawk geany ffmpeg
 --
 
-WARNING: Avoid using an overly old version of Bash. Associative arrays came up in v4 or something.
-
 
 # Contents
 
