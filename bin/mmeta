@@ -5,13 +5,15 @@
 # Display information found in MP3 tags, using eyeD3 or whatever is set using
 # the variable below.
 
-PROG=eyeD3
-OPTNS='--no-color'
-PLACEHOLDER='Unknown'
+readonly PROG=eyeD3
+readonly OPTNS=(
+    --no-color
+)
+readonly PLACEHOLDER='Unknown'
 
 function usage {
-    bold="$(tput bold)"
-    normal="$(tput sgr0)"
+    bold=$(tput T"${TERM:-xterm}" bold 2> /dev/null)
+    normal=$(tput T"${TERM:-xterm}" sgr0 2> /dev/null)
     
     cat << _HELP_
 
@@ -62,13 +64,20 @@ _HELP_
 # Read lines on stdin and replace empty ones with the contents of PLACEHOLDER.
 # If no line is read, a single PLACEHOLDER is echoed.
 function replace_if_empty {
-    something=''
+    local something
+    
     while read -rd $'\n' line
     do
-        test "$line" && echo "$line" || echo "$PLACEHOLDER"
+        if [ "$line" ]
+        then
+            printf '%s\n' "$line"
+        else
+            printf '%s\n' "$PLACEHOLDER"
+        fi
         something=1
     done
-    test "$something" || echo "$PLACEHOLDER"
+    
+    test ! "$something" && printf '%s\n' "$PLACEHOLDER"
 }
 
 
@@ -111,7 +120,7 @@ done
 shift $((OPTIND - 1))
 
 
-if [ "$#" -eq 1 ]
+if [ $# -eq 1 ]
 then
     echo "$(basename "$0"): Error: No file provided." >&2
     echo >&2
@@ -123,41 +132,51 @@ fi
 status=0
 
 
-for ((k = 2;  k <= "$#";  k++))
+for ((k = 2;  k <= $#;  k++))
 do
-    f="${!k}"
+    f=${!k}
     
     if [ ! -r "$f" ]
     then
-        echo "$(basename "$0"): Error: \"$f\" cannot be found or read." >&2
+        printf '%s: Error: “%s” cannot be found or read.\n' \
+                "$(basename "$0")" "$f" >&2
+        
         test "$status" -eq 0 && status=10
+        # Count failures but avoid overflow.
         test "$status" -lt 255 && ((status++))
+        
         continue
     fi
     
-    if [ "$(grep -i '\.flac' <<< "$f")" ]
+    if grep -qi '\.flac$' <<< "$f"
     then
         # Looks like a flac file. Let's try to retrieve Vorbis comments.
         #       "    comment[0]: ARTIST=artist name"
         # -->   "artist: artist name"
-        data="$(metaflac --list "$f" | grep '[[:space:]]*comment\[' | sed 's/[^:]*: \([^=]\+\)=\(.*\)/\L\1\E: \2/')"
+        data=$(
+            metaflac --list "$f" \
+                    | grep '[[:space:]]*comment\[' \
+                    | sed 's/[^:]*: \([^=]\+\)=\(.*\)/\L\1\E: \2/'
+        )
     else
-        # Should be a mp3 file.
-        data="$("$PROG" $OPTNS "$f" 2> /dev/null | tr '\t' '\n')"
+        # Should be an MP3 file.
+        data=$(
+            "$PROG" "${OPTNS[@]}" "$f" 2> /dev/null | tr '\t' '\n'
+        )
     fi
     
     # The "t l; d; :l; q" part is a conditional branching allowing us to quit
     # at the first match. "l" is the label name. This is important because
     # there might be weird comments in the metadata, at the end of the data.
-    a="$(sed -n 's/^[Aa]rtist: //p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)"
-    t="$(sed -n 's/^[Tt]itle: //p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)"
-    A="$(sed -n 's/^[Aa]lbum: //p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)"
-    T="$(sed -n 's/^[Tt]rack\(number\)\?: //p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)"
-    l="$(sed -n 's/^[Tt]ime: //p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)"
-    g="$(sed -n 's/^[Gg]enre: \([^(]*\)\( (.*)\)\?/\1/p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)"
-    y="$(sed -n 's/^\([Yy]ear\|[Dd]ate\): //p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)"
-    s="$(sed -n 's/^\[ \([^]]*\) \]$/\1/p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)"
-    f="$(escape_stuff <<< "$f")"
+    a=$(sed -n 's/^[Aa]rtist: //p; t l; d; :l; q'                       <<< "$data" | escape_stuff | replace_if_empty)
+    t=$(sed -n 's/^[Tt]itle: //p; t l; d; :l; q'                        <<< "$data" | escape_stuff | replace_if_empty)
+    A=$(sed -n 's/^[Aa]lbum: //p; t l; d; :l; q'                        <<< "$data" | escape_stuff | replace_if_empty)
+    T=$(sed -n 's/^[Tt]rack\(number\)\?: //p; t l; d; :l; q'            <<< "$data" | escape_stuff | replace_if_empty)
+    l=$(sed -n 's/^[Tt]ime: //p; t l; d; :l; q'                         <<< "$data" | escape_stuff | replace_if_empty)
+    g=$(sed -n 's/^[Gg]enre: \([^(]*\)\( (.*)\)\?/\1/p; t l; d; :l; q'  <<< "$data" | escape_stuff | replace_if_empty)
+    y=$(sed -n 's/^\([Yy]ear\|[Dd]ate\): //p; t l; d; :l; q'            <<< "$data" | escape_stuff | replace_if_empty)
+    s=$(sed -n 's/^\[ \([^]]*\) \]$/\1/p; t l; d; :l; q'                <<< "$data" | escape_stuff | replace_if_empty)
+    f=$(escape_stuff <<< "$f")
     
     sed "
         s/%a/$a/g

@@ -13,13 +13,17 @@ needed=(
 : ${1:?Please provide a JPG file.}
 COVER_LQ_BASENAME="${2:-cover_lq.jpg}"
 
-if ! which "${needed[@]}" &> /dev/null
-then
-    echo "$(basename "$0"): Error: Please check that the following programs are available: ${needed[@]}" >&2
-    exit 1
-fi
+for dep in "${needed[@]}"
+do
+    if ! type "$dep" &> /dev/null
+    then
+        printf '%s: Error: Please check that the following program is available: %q\n' \
+                "$(basename "$0")" "$dep" >&2
+        exit 1
+    fi
+done
 
-cover_lq="$(dirname "$1")"/"$COVER_LQ_BASENAME"
+cover_lq=$(dirname "$1")/${COVER_LQ_BASENAME}
 cp "$1" "$cover_lq" || exit
 
 size_orig=$(du -b "$1" | cut -f1)
