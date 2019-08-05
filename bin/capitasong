@@ -106,6 +106,10 @@ do
         # a simple single quote.
         s/([[:alpha:]])'"['´’]"'([[:upper:]])/\1'"'"'\l\2/g
         
+        # Word after a dash-like thing.
+        # Also use an en dash systematically and fix spacing.
+        s/([ \t]*[–—−-]+[ \t]+|[ \t]+[–—−-]+[ \t]*)([:alpha:])/ – \u\2/g
+        
         # First word:
         s/^([^[:alnum:]]*)([[:alnum:]])/\1\u\2/
         # Last word:

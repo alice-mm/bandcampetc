@@ -27,6 +27,31 @@ _params=(
     "a dude's business" "A Dude's Business"
     "a dude´s business" "A Dude's Business"
     "a dude’s business" "A Dude's Business"
+    
+    # Hyphen.
+    'a-a a'           'A-a A'
+    'a- a a'          'A – A A'
+    'a -a a'          'A – A A'
+    'a - a a'         'A – A A'
+    $'a \t - \t a a'  'A – A A'
+    # En dash.
+    'a–a a'           'A–a A'
+    'a– a a'          'A – A A'
+    'a –a a'          'A – A A'
+    'a – a a'         'A – A A'
+    $'a \t – \t a a'  'A – A A'
+    # Em dash.
+    'a—a a'           'A—a A'
+    'a— a a'          'A – A A'
+    'a —a a'          'A – A A'
+    'a — a a'         'A – A A'
+    $'a \t — \t a a'  'A – A A'
+    # Minus.
+    'a−a a'           'A−a A'
+    'a− a a'          'A – A A'
+    'a −a a'          'A – A A'
+    'a − a a'         'A – A A'
+    $'a \t − \t a a'  'A – A A'
 )
 
 for ((i = 0;  i < ${#_params[@]} - 1;  i += 2))
