@@ -119,8 +119,5 @@ do
     _inp=${_params[i]}
     _out=${_params[i + 1]}
     
-    if [ "$("$THE_SCRIPT" <<< "$_inp")" != "$_out" ]
-    then
-        exit 1
-    fi
+    test "$("$THE_SCRIPT" <<< "$_inp")" = "$_out"
 done
