@@ -7,7 +7,17 @@ readonly SCR_DIR=$(
 
 cd "$SRC_DIR" || exit
 
-for file in ./test_scripts/*.sh
+unset -v to_run
+
+if [ $# -eq 0 ]
+then
+    # If no particular file was targeted, get them all.
+    to_run=(./test_scripts/*.sh)
+else
+    to_run=("$@")
+fi
+
+for file in "${to_run[@]}"
 do
     if ! "$file"
     then
