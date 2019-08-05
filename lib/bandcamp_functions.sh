@@ -98,12 +98,8 @@ function read_metafile {
     unset -v metatracks metaartist metaalbumartist metaalbum \
             metayear metagenre
     
-    while read -r line
+    while IFS=$' \t\n=' read -r key val
     do
-        # <key> = <val>
-        key=$(sed 's/ *=.*//g' <<< "$line")
-        val=$(sed 's/^[^=]*= *//' <<< "$line")
-        
         case "$key" in
             SKIP)
                 if [ "$val" = 'y' ]
