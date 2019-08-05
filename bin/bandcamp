@@ -51,6 +51,9 @@ readonly CONVERT_TO_MP3=''
 unset -v EDITOR
 #readonly EDITOR=(nano -S)
 #readonly EDITOR=(vi)
+#readonly EDITOR=(mousepad)
+#readonly EDITOR=(leafpad)
+#readonly EDITOR=(gedit)
 readonly EDITOR=(geany -i)
 
 readonly MMETA=${SCR_DIR}/mmeta
