@@ -39,7 +39,7 @@ ImageMagick::   To manipulate cover art. (`imagemagick` package.)
 
 `awk`::         “Pattern scanning and processing language.” GNU’s `gawk` implementation recommended, but `mawk` should be enough.
 
-`geany`::       … as a recommended simple text editor to revise music metadata. You can use another editor by changing a constant’s value in `bandcamp`.
+`geany`::       … as a recommended simple text editor to revise music metadata. You can use any other editor by changing a constant’s value in `config/bandcamp.sh`.
 
 `ffmpeg` or `avconv`::  For FLAC → MP3 conversions. *(Optional)*
 
