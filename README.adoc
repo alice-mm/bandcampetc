@@ -186,7 +186,7 @@ readonly CONVERT_TO_MP3=1
 
 ## Editor
 
-To choose the text editor used to edit music metadata, check the part of `bin/bandcamp` that looks like this:
+To choose the text editor used to edit music metadata, check the part of `config/bandcamp.sh` that looks like this:
 
 [source, bash]
 --
