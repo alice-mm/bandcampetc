@@ -145,4 +145,16 @@ _DATA_
     test -z "${metatracks[456]}"
     
     test "$metamaxtrack" = 0
+    
+    cat > "$METAFILE" << '_DATA_'
+
+SKIP        = n
+ALBUM = plop = plup=plap
+
+_DATA_
+    
+    read_metafile
+    
+    # Should Read correctly even if “=” in value.
+    test "$metaalbum" = 'plop = plup=plap'
 )
