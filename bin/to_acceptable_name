@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
 # stdin → stdout, remove weird stuff.
-# Idea and first lines inspired by the “abcde” CD-ripping script. ♥
+# Idea inspired by the “abcde” CD-ripping script. ♥
 
 declare -ir MAX_LENGTH=255
 
 {
+    # Overkill stuff to replace empty input with a “_”,
+    # because obviously a file cannot have an empty name.
     unset -v found_something
     while IFS='' read -r line
     do
@@ -20,9 +22,9 @@ declare -ir MAX_LENGTH=255
     then
         echo '_'
     fi
-} | sed s,:,\ -,g \
-    | tr \ / __ \
-    | tr -d \"\?\[:cntrl:\] \
+} | sed 's,:, -,g' \
+    | tr ' /' '__' \
+    | tr -d '"?[:cntrl:]' \
     | tr "'"' #' '_' \
     | tr -d ',;' \
     | tr '~' '-' \

@@ -31,16 +31,16 @@ COVER_BASENAME='cover.jpg'
 # Leave empty if you do not wish to create those additional files.
 COVER_LQ_BASENAME='cover_lq.jpg'
 
-LQCOVER=$(which create-lq-cover)
+LQCOVER=$(type -p create-lq-cover)
 
-MMETA=$(which mmeta)
+MMETA=$(type -p mmeta)
 if [ ! -x "$MMETA" ]
 then
     echo "$(basename "$0"): Warning: Disabling ID retrieval. Check MMETA in the script. Maybe you need to download my script “mmeta”." >&2
     MMETA=''
 fi
 
-METAFLAC="$(which metaflac)"
+METAFLAC="$(type -p metaflac)"
 
 if [ $# -eq 0 ]
 then

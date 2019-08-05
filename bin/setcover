@@ -19,14 +19,14 @@ function f_help {
 }
 
 
-if [ "$#" -eq 1 ] && grep -qxE 'help|-help|--help|-h|h' <<< "$1"
+if [ $# -eq 1 ] && grep -qxE 'help|-help|--help|-h|h' <<< "$1"
 then
     f_help
     exit 0
 fi
 
 
-if [ "$#" -lt 2 ]
+if [ $# -lt 2 ]
 then
     f_help >&2
     exit 1
@@ -36,19 +36,44 @@ fi
 glob_errors=0
 
 
-METAFLAC="$(which metaflac)"
+METAFLAC=metaflac
 
 
-# Print "flac" or "mp3" or nothing if unrecognized type.
+# Print "flac" or "mp3", or nothing if unrecognized type.
 # $1 as input.
 function f_gettype {
-    if [ "$(grep -i '\.mp3$' <<< "$1")" -a "$(file -b --mime-type "$1" | grep -x 'audio/mpeg\|application/octet-stream')" ]
-    then
-        echo 'mp3'
-    elif [ "$(grep -i '\.flac$' <<< "$1")" -a "$(file -b --mime-type "$1")" = 'audio/x-flac' ]
-    then
-        echo 'flac'
-    fi
+    : "${1:?}"
+    
+    local ext
+    local mime
+    
+    ext=${1##*.}
+    ext=${ext,,}
+    
+    mime=$(
+        file -b --mime-type "$1"
+    )
+    
+    case "$ext" in
+        mp3)
+            if [ "$mime" = audio/mpeg ] ||
+                [ "$mime" = application/octet-stream ]
+            then
+                echo mp3
+            fi
+            ;;
+        
+        flac)
+            if [ "$mime" = audio/x-flac ]
+            then
+                echo flac
+            fi
+            ;;
+        
+        *)
+            # Unknown type.
+            ;;
+    esac
 }
 
 
@@ -140,6 +165,7 @@ function f_single_file {
         mp3)
             f_tag "$1" "$2"
             ;;
+        
         flac)
             if [ "$METAFLAC" ]
             then
@@ -148,6 +174,7 @@ function f_single_file {
                 echo "$(basename "$0"): Error: Cannot tag \"$1\" because metaflac does not seem to be installed." >&2
             fi
             ;;
+        
         *)
             echo "$(basename "$0"): Error: Type \"$type\" not fully supported." >&2
             ;;
@@ -155,7 +182,7 @@ function f_single_file {
 }
 
 
-pic="$2"
+pic=$2
 
 if [ "$pic" ]
 then
@@ -191,10 +218,12 @@ fi
 if [ -d "$target" ]
 then
     # TARGETING A DIRECTORY
-    target="$(sed 's:/\+$::' <<< "$target")"
+    target=$(sed 's:/\+$::' <<< "$target")
     find "$target" -maxdepth 1 -type f -iregex '.*\.\(mp3\|flac\)' -print0 | while read -rd '' file
     do
-        test -r "$file" -a -f "$file" || continue
+        test -f "$file" || continue
+        test -r "$file" || continue
+        
         f_single_file "$file" "$pic"
     done
 else

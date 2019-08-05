@@ -3,9 +3,9 @@
 # This might fail on case-insensitive systems, because "Plop" and "plop" are
 # considered to be the same name.
 
-RENAME_SCRIPT="$HOME"'/scripts/to_acceptable_name'
+RENAME_SCRIPT=$(type -p to_acceptable_name)
 
-if ! [ "$(which "$RENAME_SCRIPT")" ]
+if ! type -p "$RENAME_SCRIPT" &> /dev/null
 then
     echo "$(basename "$0"): Renaming script not found or executable." >&2
     exit 1
@@ -15,7 +15,7 @@ for file in "$@"
 do
     dest_dir="$(dirname "$file")"
     dest_base="$(
-        basename "$file" | $RENAME_SCRIPT
+        basename "$file" | "$RENAME_SCRIPT"
     )"
     
     # If there is a directory using the name we chose, we might end up
@@ -39,7 +39,12 @@ do
         # Is there an extension, by the way?
         if grep -qm 1 '\.[^.]\{1,7\}$' <<< "$dest_base_no_suffix"
         then
-            dest_base="$(sed 's/\.[^.]*$//' <<< "$dest_base_no_suffix")${suffix}$(sed 's/.*\(\.[^.]*\)$/\1/' <<< "$dest_base_no_suffix")"
+            # TODO: Use freaking brace expansions here.
+            dest_base=$(
+                sed 's/\.[^.]*$//' <<< "$dest_base_no_suffix"
+            )${suffix}$(
+                sed 's/.*\(\.[^.]*\)$/\1/' <<< "$dest_base_no_suffix"
+            )
         else
             dest_base="${dest_base_no_suffix}${suffix}"
         fi
