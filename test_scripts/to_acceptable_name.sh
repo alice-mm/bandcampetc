@@ -119,5 +119,8 @@ do
     _inp=${_params[i]}
     _out=${_params[i + 1]}
     
+    # “<<<” adds a newline. The script should work with *and*
+    # without it, hence the “printf + pipe” version.
     test "$("$THE_SCRIPT" <<< "$_inp")" = "$_out"
+    test "$(printf '%s' "$_inp" | "$THE_SCRIPT")" = "$_out"
 done
