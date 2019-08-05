@@ -383,8 +383,8 @@ _ERR_
             # Skip the metafile.
             test "$other" -ef "$METAFILE" && continue
             
-            mkdir -p "$artist"/"$album"/other/ &&
-            cp "$other" "$artist"/"$album"/other/ &&
+            mkdir -p -- "$artist"/"$album"/other/ &&
+            cp -- "$other" "$artist"/"$album"/other/ &&
             echo "$(basename "$0"): Found additional file “$(basename "$other")”."
         done < <(
             find -regextype 'posix-extended' -type f \
@@ -434,17 +434,17 @@ _ERR_
         
         echo "$(basename "$0"): Moving the files to “$final_dir“..."
         
-        mkdir -p "$final_dir" &&
-        rsync -au "$artist"/"$album"/ "$final_dir"/ &&
+        mkdir -p -- "$final_dir" &&
+        rsync -au -- "$artist"/"$album"/ "$final_dir"/ &&
         echo "$(basename "$0"): All done for this zip." &&
-        rm -v "$archive"
+        rm -v -- "$archive"
         
         # Cleaning flac directory if unused.
         # TODO: Is this still necessary? Does that ever happen?
         if [ "$type" != flac ] && [ -d "$final_dir"/flac/ ] &&
             [ "$(find "$final_dir"/flac/ -maxdepth 0 -empty)" ]
         then
-            rm -r "$final_dir"/flac/
+            rm -r -- "$final_dir"/flac/
         fi
     )
     echo
