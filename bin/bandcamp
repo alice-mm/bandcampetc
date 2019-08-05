@@ -99,12 +99,11 @@ readonly TNORM=$(tput -T"${TERM:-xterm}" sgr0 2> /dev/null)
 
 # Let's check if every needed command is available.
 unset -v DEPS
-readonly DEPS=(
+DEPS=(
     "$MMETA"
     "$COVERS"
     "$SETCOVER"
     "$CAPITASONG"
-    "$CONV"
     
     "${EDITOR[0]}"
     
@@ -116,7 +115,18 @@ readonly DEPS=(
     convert
     awk
 )
-err=0
+
+# Optional dependency.
+if [ "$CONVERT_TO_MP3" ]
+then
+    DEPS+=(
+        "$CONV"
+    )
+fi
+
+readonly DEPS
+
+unset -v err
 for cmd in "${DEPS[@]}"
 do
     if ! type -p "$cmd" &> /dev/null
@@ -128,9 +138,12 @@ do
 done
 
 # Exit if some program is missing.
-test "$err" -eq 0 || exit 2
+if [ "$err" ]
+then
+    exit 2
+fi
 
-# Go to home directory.
+# Go to home directory. TODO: Maybe useless, now.
 cd || exit
 
 DIR_TEMP=$(
@@ -142,7 +155,7 @@ then
     exit 3
 fi
 
-METAFILE="$DIR_TEMP"/bandcamp_metafile.txt
+readonly METAFILE=${DIR_TEMP}/bandcamp_metafile.txt
 
 # Reset IFS.
 IFS=$' \t\n'

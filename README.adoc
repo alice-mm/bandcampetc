@@ -22,26 +22,31 @@ WARNING: Make sure you adapt the `~/bin/bandcampetc/bin/` path of the example ac
 
 ## Dependencies
 
-The `bandcamp` script relies, directly or not, on:
+The `bandcamp` script relies on:
 
 [horizontal]
 `eyeD3`::       Manipulate MP3 metadata. Note that the software’s package is generally called `eyed3`.
 
-`metaflac`::    Manipulate FLAC metadata.
+`metaflac`::    Manipulate FLAC metadata. Bundled with the `flac` package.
 
 `rsync`::       “A fast, versatile, remote (and local) file-copying tool.”
 
 `unzip`::       Decompress ZIP archives.
 
-`identify`::    Get info on pictures. (_ImageMagick_)
-
-`convert` and `mogrify`:: Convert pictures. (_ImageMagick_)
-
-`ffmpeg` or `avconv`::  For FLAC → MP3 conversions.
+ImageMagick::   To manipulate cover art. (`imagemagick` package.)
 
 `awk`::         “Pattern scanning and processing language.” GNU’s `gawk` implementation recommended, but `mawk` should be enough.
 
 `geany`::       … as a recommended simple text editor to revise music metadata. You can use another editor by changing a constant’s value in `bandcamp`.
+
+`ffmpeg` or `avconv`::  For FLAC → MP3 conversions. *(Optional)*
+
+On Ubuntu and Debian machines, this should be enough to get everything:
+
+[source, bash]
+--
+$ sudo apt-get install eyed3 flac rsync unzip imagemagick gawk geany ffmpeg
+--
 
 WARNING: Avoid using an overly old version of Bash. Associative arrays came up in v4 or something.
 
