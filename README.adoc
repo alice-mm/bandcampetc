@@ -296,3 +296,8 @@ bandcamp: End.
 
 2 directories, 10 files
 ```
+
+
+# Contact
+
+image::http://www.alicem.net/contact.jpg[Contact email]
