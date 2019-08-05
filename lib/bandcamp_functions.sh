@@ -88,12 +88,15 @@ function edit_metafile {
 
 
 # Update a few variables depending on the contents of the file "$METAFILE".
-# → 0 if the user did not ask to skip this zip.
+#
+# → 0 if the user did not ask to skip this ZIP.
+#   1 if skipping was asked for.
 function read_metafile {
     local key
     local val
     
-    unset -v metatracks
+    unset -v metatracks metaartist metaalbumartist metaalbum \
+            metayear metagenre
     
     while read -r line
     do
@@ -125,6 +128,8 @@ function read_metafile {
         xargs -n 1 printf '%s\n' <<< "${!metatracks[@]}" \
                 | sort -rn | head -1
     )
+    
+    : "${metamaxtrack:=0}"
     
     return 0
 }

@@ -7,20 +7,16 @@ readonly SCR_DIR=$(
 
 cd "$SRC_DIR" || exit
 
-if (
-    set -evx
+for file in ./test_scripts/*.sh
+do
+    if ! "$file"
+    then
+        printf '%s: A test failed in: %q\n' \
+                "$(basename "$0")" "$file" >&2
+        exit 1
+    fi
+done
 
-    for file in test_scripts/*.sh
-    do
-        . "$file"
-    done
-)
-then
-    printf '%s: All done.\n' "$(basename "$0")"
-    
-    exit 0
-else
-    printf '%s: A test failed.\n' "$(basename "$0")" >&2
-    
-    exit 1
-fi
+printf '%s: All done.\n' "$(basename "$0")"
+
+exit 0

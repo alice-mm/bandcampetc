@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-# Meant to be sourced from run_tests.sh.
+set -evx
 
 readonly THE_SCRIPT=bin/to_acceptable_name
 
@@ -30,6 +30,13 @@ _params=(
     'a (b) c'   'a_b_c'
     'a [b] c'   'a_b_c'
     'a {b} c'   'a_b_c'
+    
+    # En dash.
+    a–b a-b
+    # Em dash.
+    a—b a--b
+    # Minus.
+    a−b a-b
     
     'a @ b'     a_at_b
     
