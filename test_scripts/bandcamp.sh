@@ -31,7 +31,7 @@ set -evx
     test "$_ok"
     
     unset -v _ok
-    _expected=(-n -- plop.txt poire.tgz)
+    _expected=(-n -- plop.txt ./poire.tgz)
     my_renamer plop.txt poire.tgz
     test "$_ok"
     
@@ -45,7 +45,7 @@ set -evx
     unset -v _called
     my_renamer ././. .
     test ! "$_called"
-) || exit
+)
 
 # read_metafile
 (
