@@ -102,9 +102,13 @@ do
         s/\bWake(s?) up\b/Wake\1 Up/g
         
         # Contractions such as "I ve" with apostrophes.
-        # Also handles the "´" character and replaces it with
+        # Also replaces non-ascii apostrophes with
         # a simple single quote.
-        s/([[:alpha:]])'"['´]"'([[:upper:]])/\1'"'"'\l\2/g
+        s/([[:alpha:]])'"['´’]"'([[:upper:]])/\1'"'"'\l\2/g
+        
+        # Word after a dash-like thing.
+        # Also use an en dash systematically and fix spacing.
+        s/([ \t]*[–—−-]+[ \t]+|[ \t]+[–—−-]+[ \t]*)([:alpha:])/ – \u\2/g
         
         # First word:
         s/^([^[:alnum:]]*)([[:alnum:]])/\1\u\2/
