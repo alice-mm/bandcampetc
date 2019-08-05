@@ -5,24 +5,11 @@
 
 declare -ir MAX_LENGTH=255
 
-{
-    # Overkill stuff to replace empty input with a “_”,
-    # because obviously a file cannot have an empty name.
-    unset -v found_something
-    while IFS='' read -r line
-    do
-        if [ "$line" ]
-        then
-            printf '%s\n' "$line"
-            found_something=1
-        fi
-    done
-    
-    if [ ! "$found_something" ]
-    then
-        echo '_'
-    fi
-} | sed 's,:, -,g' \
+# Overkill stuff to replace empty input with a “_”,
+# because obviously a file cannot have an empty name.
+data=$(cat -)
+
+sed 's,:, -,g' <<< "${data:-_}" \
     | tr ' /' '__' \
     | tr -d '"?[:cntrl:]' \
     | tr "'"' #' '_' \
