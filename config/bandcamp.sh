@@ -15,7 +15,6 @@ fi
 # I used to keep everything in both formats, and then ran out of space.
 # Now I convert to MP3 on the fly when putting music on my phone or whatever.
 readonly CONVERT_TO_MP3=''
-#readonly CONVERT_TO_MP3=1
 
 # EDITOR is a text editor command with options, in an indexed array.
 #
@@ -26,7 +25,6 @@ readonly CONVERT_TO_MP3=''
 # Make sure the command is blocking. The script should wait until
 # you close the editor. Hence the fact that I use Geany’s “-i” option,
 # to prevent it from using an existing instance.
-
 unset -v EDITOR
 #readonly EDITOR=(nano -S)
 #readonly EDITOR=(vi)

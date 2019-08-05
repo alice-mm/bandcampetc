@@ -8,7 +8,9 @@ Scripts to keep music tidy. The main one extracts and cleans files from https://
 
 ## Execution
 
-Add the `bin/` directory to your `PATH` to be able to run these scripts from everywhere.
+1. Download the project and save it where it suits you.
+
+2. Add the `bin/` directory to your `PATH` to be able to run these scripts from anywhere.
 
 .`~/.bashrc`
 [source, bash]
@@ -163,20 +165,23 @@ Remember to check that the “Appearance Conditions” are broad enough.
 
 # Configuration of the `bandcamp` script
 
+Various settings can be changed in the `config/bandcamp.sh` file.
+
 ## Converting FLAC files to MP3s
 
-To get both a FLAC and an MP3 version of your records, check the part of `bin/bandcamp` that looks like this:
+To get both a FLAC and an MP3 version of your records, check the part of `config/bandcamp.sh` that looks like this:
 
 [source, bash]
 --
-# Set to non empty value to convert FLAC files to MP3.
-# I used to keep everything in both formats, and then ran out of space.
-# Now I convert to MP3 on the fly when putting music on my phone or whatever.
 readonly CONVERT_TO_MP3=''
-#readonly CONVERT_TO_MP3=1
 --
 
-Uncomment `readonly CONVERT_TO_MP3=1` and comment or remove the `readonly CONVERT_TO_MP3=''` line to turn the feature on.
+To turn the feature on, change this line to:
+
+[source, bash]
+--
+readonly CONVERT_TO_MP3=1
+--
 
 
 ## Editor
@@ -185,19 +190,16 @@ To choose the text editor used to edit music metadata, check the part of `bin/ba
 
 [source, bash]
 --
-# EDITOR is an editor command with options, in an indexed array.
-# Example: EDITOR=(geany --new-instance)
-# Make sure the command is blocking. The script should wait until
-# you close the editor. Hence the fact that I use Geany’s “-i” option,
-# to prevent it from using an existing instance.
-
 unset -v EDITOR
 #readonly EDITOR=(nano -S)
 #readonly EDITOR=(vi)
+#readonly EDITOR=(mousepad)
+#readonly EDITOR=(leafpad)
+#readonly EDITOR=(gedit)
 readonly EDITOR=(geany -i)
 --
 
-The commented out lines give you examples for other editors than Geany.
+The commented out lines give you examples for other editors than Geany. Uncomment one of them (while commenting the others), or write your own assignment.
 
 NOTE: I use an indexed array rather than a dumb string to make the script more robust: you can use parameters that contain spaces: `readonly EDITOR=(foo -f 'bar plop' -M)`.
 
@@ -211,6 +213,15 @@ If everything works as intended, the output should end with:
 ```
 run_tests.sh: All done.
 ```
+
+[TIP]
+====
+For development purposes, you can run a subset of the test scripts by passing them as arguments:
+
+```
+$ ./run_tests.sh test_scripts/mmeta.sh test_scripts/setcover.sh
+```
+====
 
 
 # Sample execution of `bandcamp`
