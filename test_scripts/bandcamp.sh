@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-# Meant to be sourced from run_tests.sh.
+set -evx
 
 . lib/bandcamp_functions.sh
 
@@ -31,7 +31,7 @@
     test "$_ok"
     
     unset -v _ok
-    _expected=(-n -- plop.txt poire.tgz)
+    _expected=(-n -- plop.txt ./poire.tgz)
     my_renamer plop.txt poire.tgz
     test "$_ok"
     
@@ -121,4 +121,40 @@ _DATA_
     
     # Should skip this album.
     ! read_metafile
+    
+    cat > "$METAFILE" << '_DATA_'
+
+SKIP        = n
+
+# No data!
+_DATA_
+    
+    read_metafile
+    
+    # Should be all default values.
+    
+    test -z "$metaartist"
+    test -z "$metaalbumartist"
+    test -z "$metaalbum"
+    test -z "$metayear"
+    test -z "$metagenre"
+    
+    test ${#metatracks[@]} -eq 0
+    test -z "${metatracks[1]}"
+    test -z "${metatracks[23]}"
+    test -z "${metatracks[456]}"
+    
+    test "$metamaxtrack" = 0
+    
+    cat > "$METAFILE" << '_DATA_'
+
+SKIP        = n
+ALBUM = plop = plup=plap
+
+_DATA_
+    
+    read_metafile
+    
+    # Should Read correctly even if “=” in value.
+    test "$metaalbum" = 'plop = plup=plap'
 )

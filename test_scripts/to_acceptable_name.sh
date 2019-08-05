@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-# Meant to be sourced from run_tests.sh.
+set -evx
 
 readonly THE_SCRIPT=bin/to_acceptable_name
 
@@ -30,6 +30,13 @@ _params=(
     'a (b) c'   'a_b_c'
     'a [b] c'   'a_b_c'
     'a {b} c'   'a_b_c'
+    
+    # En dash.
+    a–b a-b
+    # Em dash.
+    a—b a--b
+    # Minus.
+    a−b a-b
     
     'a @ b'     a_at_b
     
@@ -112,8 +119,5 @@ do
     _inp=${_params[i]}
     _out=${_params[i + 1]}
     
-    if [ "$("$THE_SCRIPT" <<< "$_inp")" != "$_out" ]
-    then
-        exit 1
-    fi
+    test "$("$THE_SCRIPT" <<< "$_inp")" = "$_out"
 done
