@@ -17,15 +17,30 @@ else
     to_run=("$@")
 fi
 
+
+readonly TGRE=$(tput -T"${TERM:-xterm}" setaf 2 2> /dev/null)
+readonly TRED=$(tput -T"${TERM:-xterm}" setaf 1 2> /dev/null)
+readonly TNORM=$(tput -T"${TERM:-xterm}" sgr0 2> /dev/null)
+
+
 for file in "${to_run[@]}"
 do
     if ! "$file"
     then
-        printf '%s: A test failed in: %q\n' \
-                "$(basename "$0")" "$file" >&2
+        {
+            echo
+            echo
+            printf " ${TRED}❌${TNORM} A test failed in: %q\n" "$file"
+            echo
+        } >&2
         exit 1
     fi
 done
+
+echo
+echo
+printf " ${TGRE}✓${TNORM} %q\n" "${to_run[@]}"
+echo
 
 printf '%s: All done.\n' "$(basename "$0")"
 

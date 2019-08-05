@@ -88,7 +88,7 @@ function escape_stuff {
 }
 
 
-if ! type "$PROG"
+if ! type "$PROG" &> /dev/null
 then
     echo "$(basename "$0"): Error: Program \"$PROG\" not found." >&2
     exit 1
