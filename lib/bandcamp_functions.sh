@@ -4,13 +4,15 @@
 # $1    Path to target file.
 # $2    New basename.
 function my_renamer {
-    local old=$1
-    local new=$(dirname "$1")/${2}
+    local old=${1:?}
+    local new
+    
+    new=$(dirname "$1")/${2:?}
     
     if ! [ "$old" -ef "$new" ]
     then
         mv -n -- "$old" "$new" &&
-        printf '  “%q” → “%q”\n' "$(basename "$old")" "$2"
+        printf '  “%s” → “%s”\n' "$(basename "$old")" "$2"
     fi
 }
 
@@ -28,7 +30,7 @@ function mp3_or_flac_in_zip {
 #
 # stdout → Path to the file.
 function get_sample_file {
-    find -iregex '.*[^/]\.\(flac\|mp3\)' -print -quit
+    find . -iregex '.*[^/]\.\(flac\|mp3\)' -print -quit
 }
 
 
