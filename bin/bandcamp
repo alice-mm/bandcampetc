@@ -21,6 +21,7 @@ readonly SCR_DIR=$(
     dirname "$(readlink -f -- "$0")"
 )
 
+# shellcheck source=../config/bandcamp.sh
 . "$SCR_DIR"/../config/bandcamp.sh || exit
 
 
@@ -43,6 +44,7 @@ readonly TBOLD=$(tput -T"${TERM:-xterm}" bold 2> /dev/null)
 readonly TNORM=$(tput -T"${TERM:-xterm}" sgr0 2> /dev/null)
 
 
+# shellcheck source=../lib/bandcamp_functions.sh
 . "$SCR_DIR"/../lib/bandcamp_functions.sh || exit
 
 
@@ -127,9 +129,9 @@ do
     fi
     
     # Clean temp dir.
-    rm -fr "$DIR_TEMP"/*
+    rm -fr -- "${DIR_TEMP:?}"/*
     # Put the archive in it.
-    cp "$archive" "$DIR_TEMP"/ || continue
+    cp -- "$archive" "${DIR_TEMP:?}"/ || continue
     
     (
         cd "$DIR_TEMP" || exit
@@ -163,8 +165,8 @@ do
         fi
         metayear=$("$MMETA" '%y' "$sample_file")
         
-        : ${artist:=unknown_artist}
-        : ${album:=unknown_album}
+        : "${artist:=unknown_artist}"
+        : "${album:=unknown_album}"
         
         cat << _INFO_
 
@@ -177,8 +179,8 @@ do
 _INFO_
         
         artist_album_type=${artist}/${album}/${type}
-        mkdir -p "$artist_album_type" || exit
-        find -type f -iname "*.$type" -print0 \
+        mkdir -p -- "$artist_album_type" || exit
+        find . -type f -iname "*.$type" -print0 \
                 | xargs -0 -I {} mv {} "$artist_album_type"/ ||
         exit
         
@@ -248,6 +250,7 @@ _INFO_
                 tags[albumartist]=$metaalbumartist
                 tags[album]=$metaalbum
                 tags[genre]=$metagenre
+                # shellcheck disable=SC2034 # Passed by name to function.
                 tags[year]=$metayear
                 
                 retag_flac "$src" tags
@@ -367,7 +370,7 @@ _INFO_
             cp -- "$other" "$artist"/"$album"/other/ &&
             echo "$(basename "$0"): Found additional file “$(basename "$other")”."
         done < <(
-            find -regextype 'posix-extended' -type f \
+            find . -regextype 'posix-extended' -type f \
                     -iregex '.*\.(pdf|png|jpe?g|gif|txt|html|md)|.*/readme.*' \
                     -not -iregex '.*/cover(_lq)?\.(png|jpe?g|gif)' \
                     -print0
@@ -412,7 +415,8 @@ _INFO_
             "$RENAME" <<< "$metaalbum"
         )"
         
-        echo "$(basename "$0"): Moving the files to “$final_dir“..."
+        printf '%s: Moving the files to “%s”...\n' \
+                "$(basename "$0")" "$final_dir"
         
         mkdir -p -- "$final_dir" &&
         rsync -au -- "$artist"/"$album"/ "$final_dir"/ &&
