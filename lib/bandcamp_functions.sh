@@ -21,14 +21,21 @@ function mp3_or_flac_in_zip {
 
 
 # Find out if there is MP3 or FLAC in or below the working directory.
+# Get the first file of one of these types we can find.
 # If both types are present, one will be kind of randomly ignored.
+#
+# stdout → Path to the file.
+function get_sample_file {
+    find -iregex '.*[^/]\.\(flac\|mp3\)' -print -quit
+}
+
+
+# Print the lowercase extension of an MP3 or FLAC file.
+#
+# $1    The file.
 function get_record_format {
-    local sample_file
+    local sample_file=${1:?No file given.}
     local ext
-    
-    sample_file=$(
-        find -iregex '.*[^/]\.\(flac\|mp3\)' -print -quit
-    )
     
     ext=${sample_file##*.}
     

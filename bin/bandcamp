@@ -135,7 +135,8 @@ do
         cd "$DIR_TEMP" || exit
         unzip ./*.zip || exit
         
-        type=$(get_record_format)
+        sample_file=$(get_sample_file)
+        type=$(get_record_format "$sample_file")
         
         if [ -z "$type" ]
         then
