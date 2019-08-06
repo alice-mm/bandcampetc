@@ -148,8 +148,8 @@ do
         artist=$("$RENAME" <<< "$basedata")
         metaartist=$("$CAPITASONG" "$basedata")
         
-        albumartist="$artist"
-        metaalbumartist="$metaartist"
+        albumartist=$artist
+        metaalbumartist=$metaartist
         
         basedata=$("$MMETA" '%A' "$sample_file")
         album=$("$RENAME" <<< "$basedata")
@@ -239,25 +239,22 @@ _INFO_
             if [ "$type" = flac ]
             then
                 # Retagging the flac file.
-                metaflac \
-                    --dont-use-padding \
-                    --remove-tag=TITLE \
-                    --remove-tag=ARTIST \
-                    --remove-tag=ALBUMARTIST \
-                    --remove-tag=ALBUM \
-                    --remove-tag=GENRE \
-                    --remove-tag=DATE \
-                    --set-tag="TITLE=${title}" \
-                    --set-tag="ARTIST=${metaartist}" \
-                    --set-tag="ALBUMARTIST=${metaalbumartist}" \
-                    --set-tag="ALBUM=${metaalbum}" \
-                    --set-tag="GENRE=${metagenre}" \
-                    --set-tag="DATE=${metayear}" \
-                    "$src"
+                unset -v tags
+                declare -A tags || exit
+                
+                tags[title]=$title;
+                tags[artist]=$metaartist
+                tags[albumartist]=$metaalbumartist
+                tags[album]=$metaalbum
+                tags[genre]=$metagenre
+                tags[year]=$metayear
+                
+                retag_flac "$src" tags
+                unset -v tags
                 
                 if [ "$CONVERT_TO_MP3" ]
                 then
-                    dest="$artist"/"$album"/mp3/$(
+                    dest=${artist}/${album}/mp3/$(
                         # Basename without extension, whatever it is.
                         basename "$src" | sed 's/\.[^.]*$//'
                     ).mp3
@@ -301,19 +298,7 @@ _INFO_
                 then
                     echo "$(basename "$0"): Tagged the file successfully."
                 else
-                    cat >&2 << _ERR_
-
-$(basename "$0"): Error while tagging “${dest}”. Parameters:
-  --artist="${metaartist}"
-  --album="${metaalbum}"
-  --title="${title}"
-  --track="${track_number}"
-  --track-total="${metamaxtrack}"
-  --genre="${metagenre}"
-  --year="${metayear}"
-EyeD3 exit status: $?
-
-_ERR_
+                    error_while_tagging_mp3
                 fi # /else mp3 tagging failed.
             fi # /there is an MP3 file.
         done # /for src in mp3 and flac files.
