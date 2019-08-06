@@ -51,3 +51,5 @@ readonly CONV=ffmpeg
 readonly MMETA_PLACEHOLDER='Unknown'
 # Basename for low quality cover arts.
 readonly COVER_LQ_BASENAME='cover_lq.jpg'
+# Given to Lame when creating MP3 files from HQ files.
+readonly CONVERTED_MP3_RATE=128k
