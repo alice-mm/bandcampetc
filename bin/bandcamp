@@ -126,29 +126,22 @@ do
         continue
     fi
     
-    if ! rm -fr "$DIR_TEMP"/* ||
-        ! cp "$archive" "$DIR_TEMP"/
-    then
-        # Skipping this archive due to errors.
-        continue
-    fi
+    # Clean temp dir.
+    rm -fr "$DIR_TEMP"/*
+    # Put the archive in it.
+    cp "$archive" "$DIR_TEMP"/ || continue
     
     (
-        cd "$DIR_TEMP"
-        unzip ./*.zip
-        # Find out if there is mp3 or flac. If there are both, one will be
-        # kind of randomly ignored.
-        sample_file=$(
-            find -iregex '.*\.\(flac\|mp3\)' -print -quit
-        )
-        type=$(
-            tr '.' ' ' <<< "$sample_file" | awk '{ print tolower($NF) }'
-        )
+        cd "$DIR_TEMP" || exit
+        unzip ./*.zip || exit
         
-        if ! [ "$type" ]
+        type=$(get_record_format)
+        
+        if [ -z "$type" ]
         then
             echo "$(basename "$0"): Error trying to get a sample file. Skipping this zip." >&2
-            exit
+            # Get out of the subshell.
+            exit 1
         fi
         
         basedata=$("$MMETA" '%a' "$sample_file")

@@ -20,6 +20,22 @@ function mp3_or_flac_in_zip {
 }
 
 
+# Find out if there is MP3 or FLAC in or below the working directory.
+# If both types are present, one will be kind of randomly ignored.
+function get_record_format {
+    local sample_file
+    local ext
+    
+    sample_file=$(
+        find -iregex '.*[^/]\.\(flac\|mp3\)' -print -quit
+    )
+    
+    ext=${sample_file##*.}
+    
+    printf '%s\n' "${ext,,}"
+}
+
+
 # Try to look for music of the same artist to find out what the genre is.
 # If something suitable is found, it is placed in the “metagenre” variable.
 # The “albumartist” variable is used as the base for the guess.

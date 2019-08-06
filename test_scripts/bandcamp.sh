@@ -74,6 +74,41 @@ eélpedtpéelp plédtelép'
     ! mp3_or_flac_in_zip
 )
 
+# Get record format
+(
+    tdir=$(mktemp -d "${TMPDIR:-/tmp}"/bandcamp-test-XXXXXXXX)
+    
+    cd "${tdir:?}"
+    
+    : Empty dir.
+    test -z "$(get_record_format)"
+    
+    : Irrelevant files.
+    touch foo.txt bar.gif PLOP.PNG POIRE.JPG .mp3 .flac .MP3 .FLAC
+    test -z "$(get_record_format)"
+    
+    : MP3.
+    touch nya.mp3
+    test "$(get_record_format)" = mp3
+    rm nya.mp3
+    touch NYA.MP3
+    test "$(get_record_format)" = mp3
+    rm NYA.MP3
+    
+    : FLAC.
+    touch nya.flac
+    test "$(get_record_format)" = flac
+    rm nya.flac
+    touch NYA.FLAC
+    test "$(get_record_format)" = flac
+    rm NYA.FLAC
+    
+    : Both.
+    touch nya.mp3 nya.flac
+    res=$(get_record_format)
+    test "$res" = mp3 || test "$res" = flac
+)
+
 # my_renamer
 (
     # Mock “mv” to check executions.
