@@ -120,43 +120,37 @@ do
     printf '%s: Inspecting “%q”...\n' "$(basename "$0")" "$archive"
     
     # Is there music in the ZIP?
-    if ! unzip -l "$archive" | grep -iqE '\.(flac|mp3)$'
+    if ! mp3_or_flac_in_zip "$archive"
     then
         echo "$(basename "$0"): No MP3 or FLAC here. Skipping."
         continue
     fi
     
-    if ! rm -fr "$DIR_TEMP"/* ||
-        ! cp "$archive" "$DIR_TEMP"/
-    then
-        # Skipping this archive due to errors.
-        continue
-    fi
+    # Clean temp dir.
+    rm -fr "$DIR_TEMP"/*
+    # Put the archive in it.
+    cp "$archive" "$DIR_TEMP"/ || continue
     
     (
-        cd "$DIR_TEMP"
-        unzip ./*.zip
-        # Find out if there is mp3 or flac. If there are both, one will be
-        # kind of randomly ignored.
-        sample_file=$(
-            find -iregex '.*\.\(flac\|mp3\)' -print -quit
-        )
-        type=$(
-            tr '.' ' ' <<< "$sample_file" | awk '{ print tolower($NF) }'
-        )
+        cd "$DIR_TEMP" || exit
+        unzip ./*.zip || exit
         
-        if ! [ "$type" ]
+        sample_file=$(get_sample_file)
+        type=$(get_record_format "$sample_file")
+        
+        if [ -z "$type" ]
         then
             echo "$(basename "$0"): Error trying to get a sample file. Skipping this zip." >&2
-            exit
+            # Get out of the subshell.
+            exit 1
         fi
         
         basedata=$("$MMETA" '%a' "$sample_file")
         artist=$("$RENAME" <<< "$basedata")
         metaartist=$("$CAPITASONG" "$basedata")
         
-        albumartist="$artist"
-        metaalbumartist="$metaartist"
+        albumartist=$artist
+        metaalbumartist=$metaartist
         
         basedata=$("$MMETA" '%A' "$sample_file")
         album=$("$RENAME" <<< "$basedata")
@@ -182,7 +176,7 @@ do
 
 _INFO_
         
-        artist_album_type="$artist"/"$album"/"$type"
+        artist_album_type=${artist}/${album}/${type}
         mkdir -p "$artist_album_type" || exit
         find -type f -iname "*.$type" -print0 \
                 | xargs -0 -I {} mv {} "$artist_album_type"/ ||
@@ -246,25 +240,22 @@ _INFO_
             if [ "$type" = flac ]
             then
                 # Retagging the flac file.
-                metaflac \
-                    --dont-use-padding \
-                    --remove-tag=TITLE \
-                    --remove-tag=ARTIST \
-                    --remove-tag=ALBUMARTIST \
-                    --remove-tag=ALBUM \
-                    --remove-tag=GENRE \
-                    --remove-tag=DATE \
-                    --set-tag="TITLE=${title}" \
-                    --set-tag="ARTIST=${metaartist}" \
-                    --set-tag="ALBUMARTIST=${metaalbumartist}" \
-                    --set-tag="ALBUM=${metaalbum}" \
-                    --set-tag="GENRE=${metagenre}" \
-                    --set-tag="DATE=${metayear}" \
-                    "$src"
+                unset -v tags
+                declare -A tags || exit
+                
+                tags[title]=$title;
+                tags[artist]=$metaartist
+                tags[albumartist]=$metaalbumartist
+                tags[album]=$metaalbum
+                tags[genre]=$metagenre
+                tags[year]=$metayear
+                
+                retag_flac "$src" tags
+                unset -v tags
                 
                 if [ "$CONVERT_TO_MP3" ]
                 then
-                    dest="$artist"/"$album"/mp3/$(
+                    dest=${artist}/${album}/mp3/$(
                         # Basename without extension, whatever it is.
                         basename "$src" | sed 's/\.[^.]*$//'
                     ).mp3
@@ -308,21 +299,9 @@ _INFO_
                 then
                     echo "$(basename "$0"): Tagged the file successfully."
                 else
-                    cat >&2 << _ERR_
-
-$(basename "$0"): Error while tagging “${dest}”. Parameters:
-  --artist="${metaartist}"
-  --album="${metaalbum}"
-  --title="${title}"
-  --track="${track_number}"
-  --track-total="${metamaxtrack}"
-  --genre="${metagenre}"
-  --year="${metayear}"
-EyeD3 exit status: $?
-
-_ERR_
-                fi # /else mp3 tagging failed.
-            fi # /there is an MP3 file.
+                    error_while_tagging_mp3
+                fi
+            fi
         done # /for src in mp3 and flac files.
         
         # Is there a cover or something?
@@ -349,6 +328,7 @@ _ERR_
             fi
             "$LQCOVER" "$found_cover" "$COVER_LQ_BASENAME"
             
+            # Put the cover in each directory that might need it.
             for dir_that_needs_cover in "$artist"/"$album"/{flac,mp3}/
             do
                 test -d "$dir_that_needs_cover" || continue
@@ -362,7 +342,7 @@ _ERR_
         fi
         
         # Is there a cover now that we tried to find one?
-        cov_file="$artist"/"$album"/"$type"/"$COVER_LQ_BASENAME"
+        cov_file=${artist}/${album}/${type}/${COVER_LQ_BASENAME}
         if [ -r "$cov_file" ]
         then
             printf '%s: Applying “%q” to files...\n' \

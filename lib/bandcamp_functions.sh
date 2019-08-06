@@ -15,6 +15,88 @@ function my_renamer {
 }
 
 
+# $1    Path to ZIP archive.
+# Exits with 0 status iff it contains a “.mp3” or “.flac” file.
+function mp3_or_flac_in_zip {
+    unzip -l "${1:?No archive given.}" | grep -iqE '.\.(flac|mp3)$'
+}
+
+
+# Find out if there is MP3 or FLAC in or below the working directory.
+# Get the first file of one of these types we can find.
+# If both types are present, one will be kind of randomly ignored.
+#
+# stdout → Path to the file.
+function get_sample_file {
+    find -iregex '.*[^/]\.\(flac\|mp3\)' -print -quit
+}
+
+
+# Print the lowercase extension of an MP3 or FLAC file.
+#
+# $1    The file.
+function get_record_format {
+    local sample_file=${1:?No file given.}
+    local ext
+    
+    ext=${sample_file##*.}
+    
+    printf '%s\n' "${ext,,}"
+}
+
+
+# $1    FLAC file to retag.
+# $2    Name of an associative array with fields:
+#           title
+#           artist
+#           albumartist
+#           album
+#           genre
+#           year
+function retag_flac {
+    local -a retag_flac_optns
+    local -n retag_flac_data=${2:?No data given.}
+    
+    retag_flac_optns=(
+        --dont-use-padding
+        
+        --remove-tag=TITLE
+        --remove-tag=ARTIST
+        --remove-tag=ALBUMARTIST
+        --remove-tag=ALBUM
+        --remove-tag=GENRE
+        --remove-tag=DATE
+        
+        --set-tag="TITLE=${retag_flac_data[title]}"
+        --set-tag="ARTIST=${retag_flac_data[artist]}"
+        --set-tag="ALBUMARTIST=${retag_flac_data[albumartist]}"
+        --set-tag="ALBUM=${retag_flac_data[album]}"
+        --set-tag="GENRE=${retag_flac_data[genre]}"
+        --set-tag="DATE=${retag_flac_data[year]}"
+    )
+    
+    metaflac "${retag_flac_optns[@]}" "${1:?No file given.}"
+}
+
+
+# Rough function to print an error message using external variables.
+function error_while_tagging_mp3 {
+    cat >&2 << _ERR_
+
+$(basename "$0"): Error while tagging “${dest}”. Parameters:
+  --artist="${metaartist}"
+  --album="${metaalbum}"
+  --title="${title}"
+  --track="${track_number}"
+  --track-total="${metamaxtrack}"
+  --genre="${metagenre}"
+  --year="${metayear}"
+EyeD3 exit status: $?
+
+_ERR_
+}
+
+
 # Try to look for music of the same artist to find out what the genre is.
 # If something suitable is found, it is placed in the “metagenre” variable.
 # The “albumartist” variable is used as the base for the guess.
