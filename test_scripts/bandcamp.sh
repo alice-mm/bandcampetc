@@ -68,6 +68,10 @@ eélpedtpéelp plédtelép'
     do
         ! mp3_or_flac_in_zip foo
     done
+    
+    # No argument.
+    _data=foo.mp3
+    ! mp3_or_flac_in_zip
 )
 
 # my_renamer
