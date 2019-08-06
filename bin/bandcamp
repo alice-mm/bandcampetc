@@ -299,8 +299,8 @@ _INFO_
                     echo "$(basename "$0"): Tagged the file successfully."
                 else
                     error_while_tagging_mp3
-                fi # /else mp3 tagging failed.
-            fi # /there is an MP3 file.
+                fi
+            fi
         done # /for src in mp3 and flac files.
         
         # Is there a cover or something?
@@ -327,6 +327,7 @@ _INFO_
             fi
             "$LQCOVER" "$found_cover" "$COVER_LQ_BASENAME"
             
+            # Put the cover in each directory that might need it.
             for dir_that_needs_cover in "$artist"/"$album"/{flac,mp3}/
             do
                 test -d "$dir_that_needs_cover" || continue
@@ -340,7 +341,7 @@ _INFO_
         fi
         
         # Is there a cover now that we tried to find one?
-        cov_file="$artist"/"$album"/"$type"/"$COVER_LQ_BASENAME"
+        cov_file=${artist}/${album}/${type}/${COVER_LQ_BASENAME}
         if [ -r "$cov_file" ]
         then
             printf '%s: Applying “%q” to files...\n' \
