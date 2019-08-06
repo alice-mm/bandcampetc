@@ -120,7 +120,7 @@ do
     printf '%s: Inspecting “%q”...\n' "$(basename "$0")" "$archive"
     
     # Is there music in the ZIP?
-    if ! unzip -l "$archive" | grep -iqE '\.(flac|mp3)$'
+    if ! mp3_or_flac_in_zip "$archive"
     then
         echo "$(basename "$0"): No MP3 or FLAC here. Skipping."
         continue

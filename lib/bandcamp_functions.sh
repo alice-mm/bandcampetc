@@ -15,6 +15,11 @@ function my_renamer {
 }
 
 
+function mp3_or_flac_in_zip {
+    unzip -l "${1:?No archive given.}" | grep -iqE '.\.(flac|mp3)$'
+}
+
+
 # Try to look for music of the same artist to find out what the genre is.
 # If something suitable is found, it is placed in the “metagenre” variable.
 # The “albumartist” variable is used as the base for the guess.
