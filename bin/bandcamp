@@ -175,7 +175,7 @@ do
 
 _INFO_
         
-        artist_album_type="$artist"/"$album"/"$type"
+        artist_album_type=${artist}/${album}/${type}
         mkdir -p "$artist_album_type" || exit
         find -type f -iname "*.$type" -print0 \
                 | xargs -0 -I {} mv {} "$artist_album_type"/ ||
