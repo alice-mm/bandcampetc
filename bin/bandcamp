@@ -163,8 +163,8 @@ do
         fi
         metayear=$("$MMETA" '%y' "$sample_file")
         
-        : ${artist:=unknown_artist}
-        : ${album:=unknown_album}
+        : "${artist:=unknown_artist}"
+        : "${album:=unknown_album}"
         
         cat << _INFO_
 
