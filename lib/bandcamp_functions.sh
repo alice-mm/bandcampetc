@@ -384,12 +384,26 @@ function retag_mp3 {
 # $3    Name of external indexed track title array.
 function process_one_source_file {
     local src=${1:?No source music file given.}
-    local -n t=${2:?No array name given.}
-    local -n tracks=${3:?No track array name given.}
+    
+    if [ "$2" != t ]
+    then
+        local -n t=${2:?No array name given.}
+    fi
+    
+    if [ "$3" != tracks ]
+    then
+        local -n tracks=${3:?No track array name given.}
+    fi
     
     local -i track_number
     local title
     local mp3_file
+    local type
+    
+    # Extension.
+    type=${src##*.}
+    # Lowercase.
+    type=${type,,}
     
     track_number=$("$MMETA" '%T' "$src" | cut -d '/' -f 1)
     # Fallback: Try to get the track number from the filename.
@@ -401,7 +415,7 @@ function process_one_source_file {
     
     display_progress "$track_number" "${t[maxtrack]}"
     
-    title=${tracks[track_number]}
+    title=${tracks[$track_number]}
     
     if [ "$type" = flac ]
     then
