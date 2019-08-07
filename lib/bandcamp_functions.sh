@@ -37,10 +37,10 @@ function err {
 # $1    Path to target file.
 # $2    New basename.
 function my_renamer {
-    local old=${1:?}
+    local old=${1:?No target file given.}
     local new
     
-    new=$(dirname "$1")/${2:?}
+    new=$(dirname "$1")/${2:?No new basename given.}
     
     if ! [ "$old" -ef "$new" ]
     then
@@ -503,7 +503,10 @@ function process_and_move_existing_cover {
 
 # $1    Name of metadata associative array.
 function clean_all_file_names {
-    local -n t=${1:?No array name given.}
+    if [ "$1" != t ]
+    then
+        local -n t=${1:?No array name given.}
+    fi
     
     local file
     local num
