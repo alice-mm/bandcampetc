@@ -281,7 +281,10 @@ function read_metafile {
 #           album
 function display_record_info {
     local type=${1:-??}
-    local -n t=${2:?No array name given.}
+    if [ "$2" != t ]
+    then
+        local -n t=${2:?No array name given.}
+    fi
     
     cat << _INFO_
 
