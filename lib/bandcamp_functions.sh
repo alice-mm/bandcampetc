@@ -448,14 +448,17 @@ function process_one_source_file {
 function look_for_existing_cover {
     local maybe_cover
     
-    for maybe_cover in {cover,COVER}.{jpg,jpeg,png,gif,JPG,JPEG,PNG,GIF}
-    do
-        if [ -r "$maybe_cover" ]
-        then
-            printf '%s\n' "$maybe_cover"
-            return 0
-        fi
-    done
+    maybe_cover=$(
+        find . -regextype 'posix-extended' -type f -readable \
+                -iregex '.*/cover\.(png|jpe?g|gif)' \
+                -print -quit
+    )
+    
+    if [ "$maybe_cover" ]
+    then
+        printf '%s\n' "$maybe_cover"
+        return 0
+    fi
     
     return 1
 }

@@ -36,9 +36,10 @@ ok=(
     COVER.GIF
     cover.GIF
     COVER.gif
+    
+    cOvEr.jpg
 )
 not_ok=(
-    cOvEr.jpg
     foo.jpg
     foo.JPG
     foo.png
@@ -52,7 +53,7 @@ do
     
     sta=0
     out=$(look_for_existing_cover) || sta=$?
-    test "$out" = "$name"
+    test "$out" = ./"$name"
     test "$sta" -eq 0
     
     rm -- "${name:?}"
@@ -69,3 +70,12 @@ do
     
     rm -- "${name:?}"
 done
+
+# Cover within a directory.
+mkdir -p some/dir/
+touch some/dir/cover.jpg
+
+sta=0
+out=$(look_for_existing_cover) || sta=$?
+test "$out" = ./some/dir/cover.jpg
+test "$sta" -eq 0
