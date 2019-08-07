@@ -23,15 +23,22 @@ readonly TRED=$(tput -T"${TERM:-xterm}" setaf 1 2> /dev/null)
 readonly TNORM=$(tput -T"${TERM:-xterm}" sgr0 2> /dev/null)
 
 
+unset -v ok_files
+ok_files=()
+
 for file in "${to_run[@]}"
 do
     if [ ! -f "$file" ]
     then
+        printf '%s: Skipping file “%s” (not found).\n' \
+                "$(basename "$0")" "$file" >&2
         continue
     fi
     
-    if ! "$file"
+    if "$file"
     then
+        ok_files+=("$file")
+    else
         {
             echo
             echo
@@ -42,11 +49,14 @@ do
     fi
 done
 
-echo
-echo
-printf " ${TGRE}✓${TNORM} %q\n" "${to_run[@]}"
-echo
+if [ ${#ok_files[@]} -gt 0 ]
+then
+    echo
+    echo
+    printf " ${TGRE}✓${TNORM} %q\n" "${ok_files[@]}"
+    echo
+fi
 
-printf '%s: All done.\n' "$(basename "$0")"
+printf '%s: All done (%d files).\n' "$(basename "$0")" "${#ok_files[@]}"
 
 exit 0
