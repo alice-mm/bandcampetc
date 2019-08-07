@@ -465,6 +465,7 @@ function process_and_move_existing_cover {
     local found_cover=${1:?No cover given.}
     
     local new_cover
+    local lq_cover
     local dir_that_needs_cover
     
     log 'Found cover: %q' "$found_cover"
@@ -475,24 +476,28 @@ function process_and_move_existing_cover {
         new_cover=${found_cover%.*}.jpg
         convert "$found_cover" "$new_cover" &&
         log 'Converted into: %q' "$new_cover"
+        # Remove the GIF now that we converted it.
+        rm -- "$found_cover"
         found_cover=$new_cover
     fi
     
     # Create low-quality version.
     "$LQCOVER" "$found_cover" "$COVER_LQ_BASENAME"
+    lq_cover=$(dirname "$found_cover")/${COVER_LQ_BASENAME}
     
     # Put the cover in each directory that might need it.
     for dir_that_needs_cover in storage/{flac,mp3}/
     do
         test -d "$dir_that_needs_cover" || continue
         
-        cp -- "$found_cover" "$COVER_LQ_BASENAME" "$dir_that_needs_cover"/
+        # Copy HQ and LQ to the directory.
+        cp -- "$found_cover" "$lq_cover" "$dir_that_needs_cover"/
     done
     
     # Now that the cover is safely stored alongside the tracks
     # for each format (MP3, FLAC), we can delete the original files
     # that stand in the working directory.
-    rm -- "$found_cover" "$COVER_LQ_BASENAME"
+    rm -- "$found_cover" "$lq_cover"
 }
 
 
