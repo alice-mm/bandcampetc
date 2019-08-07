@@ -27,6 +27,8 @@ WARNING: Make sure you adapt the `~/bin/bandcampetc/bin/` path of the example ac
 The `bandcamp` script relies on:
 
 [horizontal]
+Bash version ≥ 4::  Because associative arrays. Should already be OK except maybe on old Macs.
+
 `eyeD3`::       Manipulate MP3 metadata. Note that the software’s package is generally called `eyed3`.
 
 `metaflac`::    Manipulate FLAC metadata. Bundled with the `flac` package.
