@@ -173,7 +173,11 @@ function print_metafile_line_for_track {
 # $2    Name of external associative metadata array.
 function print_metafile_content {
     local type=${1:?No type given.}
-    local -n t=${2:?No array name given.}
+    
+    if [ "$2" != t ]
+    then
+        local -n t=${2:?No array name given.}
+    fi
     
     local file
     
