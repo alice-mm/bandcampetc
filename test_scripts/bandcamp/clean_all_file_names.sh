@@ -30,7 +30,7 @@ readonly SCR_DIR=$(
 )
 RENAME=${SCR_DIR}/../../bin/to_acceptable_name
 
-tdir=$(mktemp -d "${TMPDIR:-/tmp}"/bandcamp-cover-test-XXXXXXXX)
+tdir=$(mktemp -d "${TMPDIR:-/tmp}"/bandcamp-clean-test-XXXXXXXX)
 
 cd "${tdir:?}"
 

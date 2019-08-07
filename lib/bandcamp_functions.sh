@@ -548,7 +548,8 @@ function clean_all_file_names {
 function find_non_music_files {
     find . -regextype 'posix-extended' -type f \
             -iregex '.*\.(pdf|png|jpe?g|gif|txt|html|md)|.*/readme.*' \
-            -not -iregex '.*/cover(_lq)?\.(png|jpe?g|gif)' \
+            -not -iregex '.*/cover\.(png|jpe?g|gif)' \
+            -not -name "${COVER_LQ_BASENAME:?}" \
             -print0
 }
 
