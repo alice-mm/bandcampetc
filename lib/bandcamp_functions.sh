@@ -593,16 +593,33 @@ function get_and_store_other_files {
 
 # $1    File from which metadata is to be initialized.
 # $2    Name used to create a global metadata associative array.
+#       The following fields will be initialized:
+#
+#           artist
+#           albumartist
+#           album
+#           year
+#           genre
 function init_metadata {
     : "${1:?No file given.}"
     : "${2:?No array name given.}"
+    
+    if [ ! -r "$1" ] || [ -d "$1" ]
+    then
+        err 'Cannot get music metadata from “%s”.' "$1"
+        return 1
+    fi
     
     # Declare the array that will be used to make the metadata
     # available to the exterior of the function.
     unset -v "$2"
     declare -gA "$2" || return
-    # Use a local handle to manipulate the array.
-    local -n t=$2
+    
+    if [ "$2" != t ]
+    then
+        # Use a local handle to manipulate the array.
+        local -n t=$2
+    fi
     
     t[artist]=$("$CAPITASONG" "$("$MMETA" '%a' "$1")")
     t[albumartist]=${t[artist]}
