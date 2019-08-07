@@ -2,6 +2,7 @@
 
 set -evx
 
+# shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
 
 

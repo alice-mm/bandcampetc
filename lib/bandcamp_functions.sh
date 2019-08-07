@@ -347,7 +347,11 @@ function convert_to_mp3 {
 # $3    Human-friendly song title.
 # $4    Name of external metadata associative array.
 function retag_mp3 {
-    local -n t=${4:?No array name given.}
+    if [ "$4" != t ]
+    then
+        local -n t=${4:?No array name given.}
+    fi
+    
     local -a optns
     
     optns=(
