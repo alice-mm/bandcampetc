@@ -37,10 +37,13 @@ readonly RENAME=${SCR_DIR}/to_acceptable_name
 : "${EDITOR:?} ${MMETA:?} ${COVERS:?} ${LQCOVER:?}"
 : "${SETCOVER:?} ${CAPITASONG:?} ${RENAME:?} ${CONV:?}"
 : "${MMETA_PLACEHOLDER:?} ${COVER_LQ_BASENAME:?}"
+: "${CONVERTED_MP3_RATE:?}"
 
 # Formatting, with overkill stuff
 # for platforms that do not support this.
 readonly TBOLD=$(tput -T"${TERM:-xterm}" bold 2> /dev/null)
+readonly TYEL=$(tput -T"${TERM:-xterm}" setaf 3 2> /dev/null)
+readonly TRED=$(tput -T"${TERM:-xterm}" setaf 1 2> /dev/null)
 readonly TNORM=$(tput -T"${TERM:-xterm}" sgr0 2> /dev/null)
 
 
@@ -77,19 +80,18 @@ fi
 
 readonly DEPS
 
-unset -v err
+unset -v at_least_one_missing
 for cmd in "${DEPS[@]}"
 do
     if ! type -p "$cmd" &> /dev/null
     then
-        printf '%s: Error: Dependency “%s” not found or not executable.\n' \
-                "$(basename "$0")" "$cmd" >&2
-        err=1
+        err 'Dependency “%s” not found or not executable.' "$cmd"
+        at_least_one_missing=1
     fi
 done
 
 # Exit if some program is missing.
-if [ "$err" ]
+if [ "$at_least_one_missing" ]
 then
     exit 2
 fi
@@ -111,6 +113,8 @@ readonly METAFILE=${DIR_TEMP}/bandcamp_metafile.txt
 IFS=$' \t\n'
 
 
+cd "$DIR_TEMP" || exit
+
 for archive in ~/{Téléchargements,Downloads}/*.{zip,ZIP}
 do
     # Skip unmatched patterns and unreadable files.
@@ -119,12 +123,12 @@ do
         continue
     fi
     
-    printf '%s: Inspecting “%q”...\n' "$(basename "$0")" "$archive"
+    log 'Inspecting “%s”...' "$archive"
     
     # Is there music in the ZIP?
     if ! mp3_or_flac_in_zip "$archive"
     then
-        echo "$(basename "$0"): No MP3 or FLAC here. Skipping."
+        log 'No MP3 or FLAC here. Skipping.'
         continue
     fi
     
@@ -133,307 +137,14 @@ do
     # Put the archive in it.
     cp -- "$archive" "${DIR_TEMP:?}"/ || continue
     
-    (
-        cd "$DIR_TEMP" || exit
-        unzip ./*.zip || exit
-        
-        sample_file=$(get_sample_file)
-        type=$(get_record_format "$sample_file")
-        
-        if [ -z "$type" ]
-        then
-            echo "$(basename "$0"): Error trying to get a sample file. Skipping this zip." >&2
-            # Get out of the subshell.
-            exit 1
-        fi
-        
-        basedata=$("$MMETA" '%a' "$sample_file")
-        artist=$("$RENAME" <<< "$basedata")
-        metaartist=$("$CAPITASONG" "$basedata")
-        
-        albumartist=$artist
-        metaalbumartist=$metaartist
-        
-        basedata=$("$MMETA" '%A' "$sample_file")
-        album=$("$RENAME" <<< "$basedata")
-        metaalbum=$("$CAPITASONG" "$basedata")
-        
-        metagenre=$("$MMETA" '%g' "$sample_file")
-        if [ "$metagenre" = "$MMETA_PLACEHOLDER" ]
-        then
-            try_to_guess_genre
-        fi
-        metayear=$("$MMETA" '%y' "$sample_file")
-        
-        : "${artist:=unknown_artist}"
-        : "${album:=unknown_album}"
-        
-        cat << _INFO_
-
-  ╭────────────────────────────────────────────╌╌┄┄┈┈
-  │ ${TBOLD}Type:  ${TNORM}  ${type}
-  │ ${TBOLD}Artist:${TNORM}  ${metaartist}
-  │ ${TBOLD}Album: ${TNORM}  “${metaalbum}”
-  ╰────────────────────────────────────────────╌╌┄┄┈┈
-
-_INFO_
-        
-        artist_album_type=${artist}/${album}/${type}
-        mkdir -p -- "$artist_album_type" || exit
-        find . -type f -iname "*.$type" -print0 \
-                | xargs -0 -I {} mv {} "$artist_album_type"/ ||
-        exit
-        
-        # Initialise metadata, show it to the user, allow corrections,
-        # read it back again.
-        write_metafile
-        edit_metafile
-        if ! read_metafile
-        then
-            echo "$(basename "$0"): Skipping, as asked by the user."
-            exit
-        fi
+    if ! process_one_music_zip "$archive"
+    then
+        err 'Could not handle this archive. Skipping.'
+    fi
     
-        # If it is flac, convert to get mp3.
-        if [ "$type" = flac ] && [ "$CONVERT_TO_MP3" ]
-        then
-            # We will need a destination directory for the converted version.
-            mkdir -p "$artist"/"$album"/mp3 || exit
-            echo "$(basename "$0"): Converting from FLAC to MP3:"
-        fi
-        
-        for src in "$artist"/"$album"/{mp3/*.mp3,flac/*.flac}
-        do
-            test -r "$src" || continue
-            
-            track_number=$(
-                "$MMETA" '%T' "$src" | cut -d '/' -f 1
-            )
-            if ! [ "$track_number" ]
-            then
-                # We will try to get the track number from the filename,
-                # but it can fail if there are numbers in the album name
-                # or something...
-                track_number=$(
-                    # Get the first group of numbers.
-                    grep -o '[0-9]\+' <<< "$(basename "$src")" \
-                            | awk '{ print int($1); exit 0 }'
-                )
-            fi
-            
-            # Display progress.
-            printf '%s: Track %02d of %02d...\n' "$(basename "$0")" \
-                    "$track_number" "$(
-                        # In some weird cases, especially with Amazon archives,
-                        # I cannot get the max number of tracks.
-                        if [ -z "$metamaxtrack" ] || [ "$metamaxtrack" = 0 ]
-                        then
-                            echo '??'
-                        else
-                            printf '%s\n' "$metamaxtrack"
-                        fi
-                    )"
-            
-            title=${metatracks[track_number]}
-            
-            # Will be set iff a MP3 to be tagged exists.
-            unset -v dest
-            
-            if [ "$type" = flac ]
-            then
-                # Retagging the flac file.
-                unset -v tags
-                declare -A tags || exit
-                
-                tags[title]=$title;
-                tags[artist]=$metaartist
-                tags[albumartist]=$metaalbumartist
-                tags[album]=$metaalbum
-                tags[genre]=$metagenre
-                # shellcheck disable=SC2034 # Passed by name to function.
-                tags[year]=$metayear
-                
-                retag_flac "$src" tags
-                unset -v tags
-                
-                if [ "$CONVERT_TO_MP3" ]
-                then
-                    dest=${artist}/${album}/mp3/$(
-                        # Basename without extension, whatever it is.
-                        basename "$src" | sed 's/\.[^.]*$//'
-                    ).mp3
-                    
-                    if ! "$CONV" -v 'quiet' -i "$src" -acodec libmp3lame -ab 128k "$dest"
-                    then
-                        echo "$(basename "$0"): Skipping tagging for this file." >&2
-                        continue
-                    fi
-                    
-                    echo "$(basename "$0"): Created $(
-                        printf '“%s” (%s)' "$(
-                            basename "$dest"
-                        )" "$(
-                            du -h "$dest" | cut -f 1
-                        )"
-                    )"
-                fi # /need conversion to MP3
-                # /type is flac
-            else
-                # MP3; no conversion, just tagging the file.
-                dest="$src"
-            fi
-            
-            # Is there an MP3 to tag?
-            if [ "$dest" ]
-            then
-                if eyeD3 \
-                        --no-color \
-                        --remove-all \
-                        --no-tagging-time-frame \
-                        --set-encoding=utf8 \
-                        --artist="$metaartist" \
-                        --album="$metaalbum" \
-                        --title="$title" \
-                        --track="$track_number" \
-                        --track-total="$metamaxtrack" \
-                        --genre="$metagenre" \
-                        --year="$metayear" \
-                        "$dest" &> /dev/null
-                then
-                    echo "$(basename "$0"): Tagged the file successfully."
-                else
-                    error_while_tagging_mp3
-                fi
-            fi
-        done # /for src in mp3 and flac files.
-        
-        # Is there a cover or something?
-        unset -v found_cover
-        for maybe_cover in cover.{jpg,png,gif}
-        do
-            if [ -r "$maybe_cover" ]
-            then
-                found_cover=$maybe_cover
-                break
-            fi
-        done
-        
-        if [ "$found_cover" ]
-        then
-            printf '%s: Found cover: %q\n' "$(basename "$0")" "$found_cover"
-            if grep -iq '\.gif$' <<< "$found_cover"
-            then
-                # Woops, it's a GIF. Let's make a JPG.
-                new_cover=${found_cover%.*}.jpg
-                convert "$found_cover" "$new_cover" &&
-                printf '%s: Converted into: %q\n' "$(basename "$0")" "$new_cover"
-                found_cover=$new_cover
-            fi
-            "$LQCOVER" "$found_cover" "$COVER_LQ_BASENAME"
-            
-            # Put the cover in each directory that might need it.
-            for dir_that_needs_cover in "$artist"/"$album"/{flac,mp3}/
-            do
-                test -d "$dir_that_needs_cover" || continue
-                
-                cp -v -- cover.jpg "$COVER_LQ_BASENAME" "$dir_that_needs_cover"/
-            done
-            
-            rm -v -- cover.jpg "$COVER_LQ_BASENAME"
-        else
-            "$COVERS" "$artist"/"$album"/{mp3,flac}/
-        fi
-        
-        # Is there a cover now that we tried to find one?
-        cov_file=${artist}/${album}/${type}/${COVER_LQ_BASENAME}
-        if [ -r "$cov_file" ]
-        then
-            printf '%s: Applying “%q” to files...\n' \
-                    "$(basename "$0")" "$cov_file"
-            "$SETCOVER" "$artist"/"$album"/"$type"/ "$cov_file" > /dev/null
-            
-            if [ "$type" = flac ] && [ "$CONVERT_TO_MP3" ]
-            then
-                # Also need to apply the cover to the converted version.
-                "$SETCOVER" "$artist"/"$album"/mp3/ "$cov_file" > /dev/null
-            fi
-        fi
-        
-        while read -rd '' other
-        do
-            # Skip nonexistent.
-            test -r "$other" || continue
-            # Skip the metafile.
-            test "$other" -ef "$METAFILE" && continue
-            
-            mkdir -p -- "$artist"/"$album"/other/ &&
-            cp -- "$other" "$artist"/"$album"/other/ &&
-            echo "$(basename "$0"): Found additional file “$(basename "$other")”."
-        done < <(
-            find . -regextype 'posix-extended' -type f \
-                    -iregex '.*\.(pdf|png|jpe?g|gif|txt|html|md)|.*/readme.*' \
-                    -not -iregex '.*/cover(_lq)?\.(png|jpe?g|gif)' \
-                    -print0
-        )
-        
-        echo "$(basename "$0"): Renaming files..."
-        for file in "$artist"/"$album"/*/*
-        do
-            test -r "$file" || continue
-            
-            if grep -Eq '\.(flac|mp3)$' <<< "$file"
-            then
-                # Get track number, turn invalid stuff to empty string.
-                num=$(
-                    "$MMETA" '%T' "$file" | cut -d '/' -f 1 | tr -cd '0-9'
-                )
-                if [ "$num" ]
-                then
-                    # 01, 02… Zero padding (according to max).
-                    num=$(
-                        printf '%0'${#metamaxtrack}'d' "$num"
-                    )
-                    file_title=$(
-                        "$MMETA" '%t' "$file" | "$RENAME"
-                    )
-                    # Rename with nn_-_title.ext, in the same directory.
-                    # Use the name-cleaning script again
-                    # to avoid “name is too long” errors.
-                    my_renamer "$file" "$(
-                        "$RENAME" <<< "${num}_-_${file_title}.${file##*.}"
-                    )"
-                fi
-            else
-                # Not a flac or mp3 file; surely a cover or something.
-                my_renamer "$file" "$(basename "$file" | "$RENAME")"
-            fi
-        done
-        
-        final_dir="$DIR_M"/"$(
-            "$RENAME" <<< "$metaalbumartist"
-        )"/"$(
-            "$RENAME" <<< "$metaalbum"
-        )"
-        
-        printf '%s: Moving the files to “%s”...\n' \
-                "$(basename "$0")" "$final_dir"
-        
-        mkdir -p -- "$final_dir" &&
-        rsync -au -- "$artist"/"$album"/ "$final_dir"/ &&
-        echo "$(basename "$0"): All done for this zip." &&
-        rm -v -- "$archive"
-        
-        # Cleaning flac directory if unused.
-        # TODO: Is this still necessary? Does that ever happen?
-        if [ "$type" != flac ] && [ -d "$final_dir"/flac/ ] &&
-            [ "$(find "$final_dir"/flac/ -maxdepth 0 -empty)" ]
-        then
-            rm -r -- "$final_dir"/flac/
-        fi
-    )
     echo
 done
 
-printf '%s: End.\n' "$(basename "$0")"
+log 'End.'
 
 exit 0
