@@ -637,8 +637,12 @@ function init_metadata {
 
 
 # $1    Name of external associative metadata array about the album.
+#       Used for fields “albumartist” and “album”.
 function compute_final_dir_path {
-    local -n t=${1:?No array name given.}
+    if [ "$1" != t ]
+    then
+        local -n t=${1:?No array name given.}
+    fi
     
     local artist_dirname
     local album_dirname
