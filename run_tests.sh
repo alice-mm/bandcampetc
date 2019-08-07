@@ -12,7 +12,7 @@ unset -v to_run
 if [ $# -eq 0 ]
 then
     # If no particular file was targeted, get them all.
-    to_run=(./test_scripts/*.sh)
+    to_run=(./test_scripts/{,*/}*.sh)
 else
     to_run=("$@")
 fi
@@ -25,6 +25,11 @@ readonly TNORM=$(tput -T"${TERM:-xterm}" sgr0 2> /dev/null)
 
 for file in "${to_run[@]}"
 do
+    if [ ! -f "$file" ]
+    then
+        continue
+    fi
+    
     if ! "$file"
     then
         {

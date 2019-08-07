@@ -91,7 +91,12 @@ function get_record_format {
 function retag_flac {
     : "${1:?No file given.}"
     : "${2:?No song title given.}"
-    local -n t=${3:?No array name given.}
+    : "${3:?No array name given.}"
+    
+    if [ "$3" != t ]
+    then
+        local -n t=$3
+    fi
     
     local -a optns
     
@@ -207,7 +212,7 @@ function edit_metafile {
 # depending on the contents of the file "$METAFILE".
 # Also store track titles in an indexed array of a given name.
 #
-# $1    Name of metadata associative array.
+# $1    Name of metadata associative array (should already be declared).
 # $2    Name of a global track title indexed array
 #       that will be created and filled here.
 #
@@ -216,8 +221,15 @@ function edit_metafile {
 function read_metafile {
     local -n t=${1:?No array name given.}
     
-    declare -ga "${2:?No track array name given.}"
-    local -n tracks=$2
+    unset -v "${2:?No track array name given.}"
+    declare -ga "$2"
+    
+    # Avoid “circular name references”: declare a reference
+    # only if needed.
+    if [ "$2" != tracks ]
+    then
+        local -n tracks=$2
+    fi
     
     local key
     local val
