@@ -81,6 +81,8 @@ test "$_called_tag_mp3"
 test "$_tagged_mp3"
 test ! "$_called_tag_flac"
 test ! "$_tagged_flac"
+test ! "$_mkdir_ok"
+test ! "$_convert_ok"
 
 unset -v _tagged_mp3 _tagged_flac _called_tag_mp3 _called_tag_flac
 process_one_source_file storage/flac/foo.flac meta tracks
@@ -88,6 +90,8 @@ test ! "$_called_tag_mp3"
 test ! "$_tagged_mp3"
 test "$_called_tag_flac"
 test "$_tagged_flac"
+test ! "$_mkdir_ok"
+test ! "$_convert_ok"
 
 CONVERT_TO_MP3=1
 
