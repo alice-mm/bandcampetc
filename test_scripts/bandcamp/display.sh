@@ -53,3 +53,25 @@ test "$(display_record_info tYpE meta)" = "$(
 
 _EXPECTED_
 )"
+
+
+test "$(display_progress)" \
+        = "<bold>$(basename "$0"):<norm> Track ?? of ??..."
+
+test "$(display_progress foo bar)" \
+        = "<bold>$(basename "$0"):<norm> Track ?? of ??..."
+
+test "$(display_progress 0 -1)" \
+        = "<bold>$(basename "$0"):<norm> Track ?? of ??..."
+
+test "$(display_progress 1 lsilsilsi)" \
+        = "<bold>$(basename "$0"):<norm> Track 1 of ??..."
+
+test "$(display_progress 03 0047)" \
+        = "<bold>$(basename "$0"):<norm> Track 3 of 47..."
+
+test "$(display_progress 03 '')" \
+        = "<bold>$(basename "$0"):<norm> Track 3 of ??..."
+
+test "$(display_progress 3 7)" \
+        = "<bold>$(basename "$0"):<norm> Track 3 of 7..."

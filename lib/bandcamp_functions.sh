@@ -298,21 +298,22 @@ _INFO_
 }
 
 
+# $1    Current track, if available.
+# $2    Total number of tracks, if available.
 function display_progress {
     local n
     local max
     
-    if [ "$1" ] && [ "$1" != 0 ]
+    n=$(    awk '{ print int($0) }' <<< "$1")
+    max=$(  awk '{ print int($0) }' <<< "$2")
+    
+    if [ "$n" -lt 1 ]
     then
-        n=$1
-    else
         n='??'
     fi
     
-    if [ "$2" ] && [ "$2" != 0 ]
+    if [ "$max" -lt 1 ]
     then
-        max=$2
-    else
         max='??'
     fi
     
