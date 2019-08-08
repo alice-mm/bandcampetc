@@ -90,9 +90,29 @@ function get_record_format {
 }
 
 
+# $1    Track number “n”.
+# $2    Name of external metadata associative array “m”.
+#
+# stdout →  m[a<n>] if not empty, otherwise m[artist].
+function get_artist_for_track {
+    local -i n=$1
+    
+    : "${n:?No track number given.}"
+    : "${2:?No array name given.}"
+    
+    if [ "$2" != t ]
+    then
+        local -n t=$2
+    fi
+    
+    printf '%s\n' "${t[a${n}]:-${t['artist']}}"
+}
+
+
 # $1    FLAC file to retag.
-# $2    Human-friendly song title.
-# $3    Name of an associative array with fields:
+# $2    Track number.
+# $3    Human-friendly song title.
+# $4    Name of an associative array with fields:
 #           artist
 #           albumartist
 #           album
@@ -100,12 +120,13 @@ function get_record_format {
 #           year
 function retag_flac {
     : "${1:?No file given.}"
-    : "${2:?No song title given.}"
-    : "${3:?No array name given.}"
+    : "${2:?No track number given.}"
+    : "${3:?No song title given.}"
+    : "${4:?No array name given.}"
     
-    if [ "$3" != t ]
+    if [ "$4" != t ]
     then
-        local -n t=$3
+        local -n t=$4
     fi
     
     local -a optns
@@ -120,8 +141,8 @@ function retag_flac {
         --remove-tag=GENRE
         --remove-tag=DATE
         
-        --set-tag="TITLE=${2}"
-        --set-tag="ARTIST=${t[artist]}"
+        --set-tag="TITLE=${3}"
+        --set-tag="ARTIST=$(get_artist_for_track "$2" t)"
         --set-tag="ALBUMARTIST=${t[albumartist]}"
         --set-tag="ALBUM=${t[album]}"
         --set-tag="GENRE=${t[genre]}"
@@ -458,7 +479,7 @@ function retag_mp3 {
         --no-tagging-time-frame
         --set-encoding=utf8
         
-        --artist="${t[artist]}"
+        --artist="$(get_artist_for_track "$2" t)"
         --album="${t[album]}"
         --title="${3:?No song title given.}"
         --track="${2:?No track number given.}"

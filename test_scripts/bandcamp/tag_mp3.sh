@@ -15,7 +15,7 @@ function eyeD3 {
         --no-tagging-time-frame
         --set-encoding=utf8
         
-        --artist='a b'
+        --artist="$_expected_artist"
         --album='C d Ef'
         --title='lsilsi jrejre'
         --track=42
@@ -56,6 +56,7 @@ declare -A meta=(
 )
 
 unset -v _called _ok
+_expected_artist='a b'
 retag_mp3 dest.mp3 42 'lsilsi jrejre' meta
 test "$_called"
 test "$_ok"
@@ -63,6 +64,16 @@ test "$_ok"
 _status=1
 
 unset -v _called _ok
+_expected_artist='a b'
 ! retag_mp3 dest.mp3 42 'lsilsi jrejre' meta
+test "$_called"
+test "$_ok"
+
+: With custom artist.
+_status=0
+unset -v _called _ok
+meta['a42']='Cus Tom'
+_expected_artist='Cus Tom'
+retag_mp3 dest.mp3 42 'lsilsi jrejre' meta
 test "$_called"
 test "$_ok"
