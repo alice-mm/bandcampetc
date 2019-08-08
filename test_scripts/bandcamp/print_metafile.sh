@@ -60,5 +60,22 @@ GENRE       = lsi nrnrnr lsi
 # <Track #> = <Title>
 3      = A a B a A
 3      = A a B a A
+
+# If some tracks should have a different artist
+# than ARTIST, you can add a line to override it.
+# For example, to set “Some Guy” as artist for
+# the 7th track, add (anywhere) a line like:
+#
+#       a7=Some guy
+#
+# (without the “#”)
+# You can also set the same custom artist for
+# several tracks in one line, using a list of
+# track numbers and (optionally) intervals:
+#
+#       a3,5-8,13 = Another Artist
+#
+# This will set the artist for tracks 3, 5,
+# 6, 7, 8 and 13.
 _EXPECTED_
 )"

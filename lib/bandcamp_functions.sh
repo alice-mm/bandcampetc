@@ -12,7 +12,17 @@ function _f_log {
     
     prog=${TBOLD}$(basename "$0"):${TNORM}
     
-    printf "%s%s ${2}\n" "$prog" "$1" "${@:3}"
+    printf "%s %s${2}\n" "$prog" "$1" "${@:3}"
+}
+
+# Only has an effect if PRINT_DEBUG is not empty.
+# $1    Printf-style format string.
+# $2…n  Arguments for printf.
+function debug {
+    if [ "$PRINT_DEBUG" ]
+    then
+        _f_log 'Debug: ' "$@"
+    fi
 }
 
 # $1    Printf-style format string.
@@ -24,13 +34,13 @@ function log {
 # $1    Printf-style format string.
 # $2…n  Arguments for printf.
 function warn {
-    _f_log " ${TYEL}Warning:${TNORM}" "$@" >&2
+    _f_log "${TYEL}Warning:${TNORM} " "$@" >&2
 }
 
 # $1    Printf-style format string.
 # $2…n  Arguments for printf.
 function err {
-    _f_log " ${TRED}Error:${TNORM}" "$@" >&2
+    _f_log "${TRED}Error:${TNORM} " "$@" >&2
 }
 
 
@@ -181,7 +191,7 @@ function print_metafile_content {
     
     local file
     
-    cat << _CONTENT_
+    cat << _CONTENT_TOP_
 # Edit this file, save, and close your editor.
 # If this ZIP was not meant to be read,
 # set “SKIP” to “y” to skip it.
@@ -195,7 +205,7 @@ YEAR        = ${t[year]}
 GENRE       = ${t[genre]}
 
 # <Track #> = <Title>
-_CONTENT_
+_CONTENT_TOP_
 
     while read -rd '' file
     do
@@ -203,12 +213,80 @@ _CONTENT_
     done < <(
         find storage/"$type"/ -type f -iname "*.${type}" -print0
     ) | sort -V
+    
+    cat << '_CONTENT_BOTTOM_'
+
+# If some tracks should have a different artist
+# than ARTIST, you can add a line to override it.
+# For example, to set “Some Guy” as artist for
+# the 7th track, add (anywhere) a line like:
+#
+#       a7=Some guy
+#
+# (without the “#”)
+# You can also set the same custom artist for
+# several tracks in one line, using a list of
+# track numbers and (optionally) intervals:
+#
+#       a3,5-8,13 = Another Artist
+#
+# This will set the artist for tracks 3, 5,
+# 6, 7, 8 and 13.
+_CONTENT_BOTTOM_
 }
 
 
 # Allow the user to edit metadata in the file "$METAFILE".
 function edit_metafile {
     "${EDITOR[@]}" "$METAFILE"
+}
+
+
+# $1    A string like:
+#   [aA] ([0-9]+ | [0-9]+-[0-9]+) (, ([0-9]+ | [0-9]+-[0-9]+) )*
+# (spaces will be ignored)
+#
+# stdout →  Individual numbers referred to by the list, one per line.
+#           For example, for the input “3,7-10,14”, the output will be:
+#
+#           3
+#           7
+#           8
+#           9
+#           10
+#           14
+function get_override_track_nums {
+    : "${1:?No input given.}"
+    
+    local specs
+    local res
+    
+    specs=$(
+        sed -r '
+            # Remove useless characters.
+            s/[^0-9,-]//g
+            
+            # Simplify redundancies.
+            s/,{2,}/,/g
+            s/-{2,}/-/g
+            
+            # Remove leading and trailing commas.
+            s/^,+//
+            s/,+$//
+            
+            # Quit, ignoring subsequent lines.
+            q
+        ' <<< "$1"
+    )
+    
+    res=$(seq 999 | cut -d $'\n' -f "$specs" 2> /dev/null)
+    
+    if [ "$res" ]
+    then
+        printf '%s\n' "$res"
+    else
+        warn 'Could not process track list “%s”. Ignoring.' "$specs"
+    fi
 }
 
 
@@ -237,10 +315,18 @@ function read_metafile {
     
     local key
     local val
+    local -i one_num_for_override
     local -i max=0
     
-    while IFS=$' \t\n=' read -r key val
+    while IFS='=' read -r key val
     do
+        # Trim. I used to be able to do that by adding [ \t] to IFS
+        # but if I want to allow spaces in artist-overriding
+        # track-number lists I have to make sure only “=” can determine
+        # the boundary between key and value.
+        key=$(sed -r 's/^[ \t]+|[ \t]+$//g' <<< "$key")
+        val=$(sed -r 's/^[ \t]+|[ \t]+$//g' <<< "$val")
+    
         case "$key" in
             SKIP)
                 if [ "$val" = y ]
@@ -255,12 +341,24 @@ function read_metafile {
             YEAR)           t['year']=$val;;
             GENRE)          t['genre']=$val;;
             
-            [0-9]|[0-9][0-9]|[0-9][0-9][0-9])
+            [0-9]|[0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9][0-9][0-9])
                 if [ "$key" -gt "$max" ]
                 then
                     max=$key
                 fi
                 tracks[$key]=$val
+                
+                debug 'Track %d: %q' "$key" "$val"
+                ;;
+            
+            # Artist override line.
+            [aA]*[0-9]*)
+                while read -r one_num_for_override
+                do
+                    t["a${one_num_for_override}"]=$val
+                    
+                    debug 'Track %d custom artist: %q' "$one_num_for_override" "$val"
+                done < <(get_override_track_nums "$key")
                 ;;
             
             *)
@@ -417,6 +515,8 @@ function process_one_source_file {
     
     title=${tracks[$track_number]}
     
+    debug 'Tagging “%s”... Title: “%s”' "$src" "$title"
+    
     if [ "$type" = flac ]
     then
         retag_flac "$src" "$title" "$2"
@@ -478,7 +578,7 @@ function process_and_move_existing_cover {
         # Woops, it's a GIF. Let's make a JPG.
         new_cover=${found_cover%.*}.jpg
         convert "$found_cover" "$new_cover" &&
-        log 'Converted into: %q' "$new_cover"
+        debug 'Converted into: %q' "$new_cover"
         # Remove the GIF now that we converted it.
         rm -- "$found_cover"
         found_cover=$new_cover
@@ -516,7 +616,7 @@ function clean_all_file_names {
     local file_title
     local new_basename
     
-    log 'Renaming files...'
+    debug 'Renaming files...'
     
     for file in storage/*/*
     do

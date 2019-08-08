@@ -35,7 +35,7 @@ do
         continue
     fi
     
-    if "$file"
+    if PRINT_DEBUG=1 "$file"
     then
         ok_files+=("$file")
     else
