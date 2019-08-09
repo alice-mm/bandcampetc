@@ -560,7 +560,7 @@ function process_one_source_file {
     
     if [ "$type" = flac ]
     then
-        retag_flac "$src" "$title" "$2"
+        retag_flac "$src" "$track_number" "$title" "$2"
         
         if [ "$CONVERT_TO_MP3" ]
         then
