@@ -108,7 +108,7 @@ do
         
         # Word after a dash-like thing.
         # Also use an en dash systematically and fix spacing.
-        s/([ \t]*[–—−-]+[ \t]+|[ \t]+[–—−-]+[ \t]*)([:alpha:])/ – \u\2/g
+        s/([ \t]*[–—−-]+[ \t]+|[ \t]+[–—−-]+[ \t]*)([[:alpha:]])/ – \u\2/g
         
         # First word:
         s/^([^[:alnum:]]*)([[:alnum:]])/\1\u\2/

@@ -12,7 +12,17 @@ function _f_log {
     
     prog=${TBOLD}$(basename "$0"):${TNORM}
     
-    printf "%s%s ${2}\n" "$prog" "$1" "${@:3}"
+    printf "%s %s${2}\n" "$prog" "$1" "${@:3}"
+}
+
+# Only has an effect if PRINT_DEBUG is not empty.
+# $1    Printf-style format string.
+# $2…n  Arguments for printf.
+function debug {
+    if [ "$PRINT_DEBUG" ]
+    then
+        _f_log 'Debug: ' "$@"
+    fi
 }
 
 # $1    Printf-style format string.
@@ -24,13 +34,13 @@ function log {
 # $1    Printf-style format string.
 # $2…n  Arguments for printf.
 function warn {
-    _f_log " ${TYEL}Warning:${TNORM}" "$@" >&2
+    _f_log "${TYEL}Warning:${TNORM} " "$@" >&2
 }
 
 # $1    Printf-style format string.
 # $2…n  Arguments for printf.
 function err {
-    _f_log " ${TRED}Error:${TNORM}" "$@" >&2
+    _f_log "${TRED}Error:${TNORM} " "$@" >&2
 }
 
 
@@ -80,9 +90,29 @@ function get_record_format {
 }
 
 
+# $1    Track number “n”.
+# $2    Name of external metadata associative array “m”.
+#
+# stdout →  m[a<n>] if not empty, otherwise m[artist].
+function get_artist_for_track {
+    local -i n=$1
+    
+    : "${n:?No track number given.}"
+    : "${2:?No array name given.}"
+    
+    if [ "$2" != t ]
+    then
+        local -n t=$2
+    fi
+    
+    printf '%s\n' "${t[a${n}]:-${t['artist']}}"
+}
+
+
 # $1    FLAC file to retag.
-# $2    Human-friendly song title.
-# $3    Name of an associative array with fields:
+# $2    Track number.
+# $3    Human-friendly song title.
+# $4    Name of an associative array with fields:
 #           artist
 #           albumartist
 #           album
@@ -90,12 +120,13 @@ function get_record_format {
 #           year
 function retag_flac {
     : "${1:?No file given.}"
-    : "${2:?No song title given.}"
-    : "${3:?No array name given.}"
+    : "${2:?No track number given.}"
+    : "${3:?No song title given.}"
+    : "${4:?No array name given.}"
     
-    if [ "$3" != t ]
+    if [ "$4" != t ]
     then
-        local -n t=$3
+        local -n t=$4
     fi
     
     local -a optns
@@ -110,8 +141,8 @@ function retag_flac {
         --remove-tag=GENRE
         --remove-tag=DATE
         
-        --set-tag="TITLE=${2}"
-        --set-tag="ARTIST=${t[artist]}"
+        --set-tag="TITLE=${3}"
+        --set-tag="ARTIST=$(get_artist_for_track "$2" t)"
         --set-tag="ALBUMARTIST=${t[albumartist]}"
         --set-tag="ALBUM=${t[album]}"
         --set-tag="GENRE=${t[genre]}"
@@ -152,18 +183,38 @@ function try_to_guess_genre {
 }
 
 
+# Yields an int rather than something that could be in a “k/n” format.
+# “0” if no data.
+function get_clean_track_number_from_file {
+    "$MMETA" '%T\n' "${1:?No file given.}" | sed 's:\/.*::g' | awk '{ print int($1) }'
+}
+
+
 function print_metafile_line_for_track {
     : "${1:?No file given.}"
     
     local -i n
     local title
+    local raw_title
     
     # Track number. We just want a nonpadded integer.
     # It might be <n>/<k>, I think, hence the sed removing stuff.
-    n=$(
-        "$MMETA" '%T\n' "$1" | sed 's:\/.*::g' | awk '{ print int($1) }'
-    )
-    title=$("$CAPITASONG" "$("$MMETA" '%t' "$1")")
+    n=$(get_clean_track_number_from_file "$1")
+    
+    raw_title=$("$MMETA" '%t' "$1")
+    if [ "$raw_title" = "$MMETA_PLACEHOLDER" ]
+    then
+        # Use filename as fallback to be able to differentiate tracks
+        # if several have crappy metadata.
+        raw_title=$(
+            basename "$1" | sed -r '
+                s/\.(mp3|flac)$//i
+                s/[_ ]+/ /g
+            '
+        )
+    fi
+    
+    title=$("$CAPITASONG" "$raw_title")
     
     printf '%-7d= %s\n' "$n" "$title"
 }
@@ -181,7 +232,7 @@ function print_metafile_content {
     
     local file
     
-    cat << _CONTENT_
+    cat << _CONTENT_TOP_
 # Edit this file, save, and close your editor.
 # If this ZIP was not meant to be read,
 # set “SKIP” to “y” to skip it.
@@ -195,7 +246,7 @@ YEAR        = ${t[year]}
 GENRE       = ${t[genre]}
 
 # <Track #> = <Title>
-_CONTENT_
+_CONTENT_TOP_
 
     while read -rd '' file
     do
@@ -203,12 +254,80 @@ _CONTENT_
     done < <(
         find storage/"$type"/ -type f -iname "*.${type}" -print0
     ) | sort -V
+    
+    cat << '_CONTENT_BOTTOM_'
+
+# If some tracks should have a different artist
+# than ARTIST, you can add a line to override it.
+# For example, to set “Some Guy” as artist for
+# the 7th track, add (anywhere) a line like:
+#
+#       a7=Some guy
+#
+# (without the “#”)
+# You can also set the same custom artist for
+# several tracks in one line, using a list of
+# track numbers and (optionally) intervals:
+#
+#       a3,5-8,13 = Another Artist
+#
+# This will set the artist for tracks 3, 5,
+# 6, 7, 8 and 13.
+_CONTENT_BOTTOM_
 }
 
 
 # Allow the user to edit metadata in the file "$METAFILE".
 function edit_metafile {
     "${EDITOR[@]}" "$METAFILE"
+}
+
+
+# $1    A string like:
+#   [aA] ([0-9]+ | [0-9]+-[0-9]+) (, ([0-9]+ | [0-9]+-[0-9]+) )*
+# (spaces will be ignored)
+#
+# stdout →  Individual numbers referred to by the list, one per line.
+#           For example, for the input “3,7-10,14”, the output will be:
+#
+#           3
+#           7
+#           8
+#           9
+#           10
+#           14
+function get_override_track_nums {
+    : "${1:?No input given.}"
+    
+    local specs
+    local res
+    
+    specs=$(
+        sed -r '
+            # Remove useless characters.
+            s/[^0-9,-]//g
+            
+            # Simplify redundancies.
+            s/,{2,}/,/g
+            s/-{2,}/-/g
+            
+            # Remove leading and trailing commas.
+            s/^,+//
+            s/,+$//
+            
+            # Quit, ignoring subsequent lines.
+            q
+        ' <<< "$1"
+    )
+    
+    res=$(seq 999 | cut -d $'\n' -f "$specs" 2> /dev/null)
+    
+    if [ "$res" ]
+    then
+        printf '%s\n' "$res"
+    else
+        warn 'Could not process track list “%s”. Ignoring.' "$specs"
+    fi
 }
 
 
@@ -237,10 +356,18 @@ function read_metafile {
     
     local key
     local val
+    local -i one_num_for_override
     local -i max=0
     
-    while IFS=$' \t\n=' read -r key val
+    while IFS='=' read -r key val
     do
+        # Trim. I used to be able to do that by adding [ \t] to IFS
+        # but if I want to allow spaces in artist-overriding
+        # track-number lists I have to make sure only “=” can determine
+        # the boundary between key and value.
+        key=$(sed -r 's/^[ \t]+|[ \t]+$//g' <<< "$key")
+        val=$(sed -r 's/^[ \t]+|[ \t]+$//g' <<< "$val")
+    
         case "$key" in
             SKIP)
                 if [ "$val" = y ]
@@ -255,12 +382,24 @@ function read_metafile {
             YEAR)           t['year']=$val;;
             GENRE)          t['genre']=$val;;
             
-            [0-9]|[0-9][0-9]|[0-9][0-9][0-9])
+            [0-9]|[0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9][0-9][0-9])
                 if [ "$key" -gt "$max" ]
                 then
                     max=$key
                 fi
                 tracks[$key]=$val
+                
+                debug 'Track %d: %q' "$key" "$val"
+                ;;
+            
+            # Artist override line.
+            [aA]*[0-9]*)
+                while read -r one_num_for_override
+                do
+                    t[a${one_num_for_override}]=$val
+                    
+                    debug 'Track %d custom artist: %q' "$one_num_for_override" "$val"
+                done < <(get_override_track_nums "$key")
                 ;;
             
             *)
@@ -360,7 +499,7 @@ function retag_mp3 {
         --no-tagging-time-frame
         --set-encoding=utf8
         
-        --artist="${t[artist]}"
+        --artist="$(get_artist_for_track "$2" t)"
         --album="${t[album]}"
         --title="${3:?No song title given.}"
         --track="${2:?No track number given.}"
@@ -416,6 +555,8 @@ function process_one_source_file {
     display_progress "$track_number" "${t[maxtrack]}"
     
     title=${tracks[$track_number]}
+    
+    debug 'Tagging “%s”... Title: “%s”' "$src" "$title"
     
     if [ "$type" = flac ]
     then
@@ -478,7 +619,7 @@ function process_and_move_existing_cover {
         # Woops, it's a GIF. Let's make a JPG.
         new_cover=${found_cover%.*}.jpg
         convert "$found_cover" "$new_cover" &&
-        log 'Converted into: %q' "$new_cover"
+        debug 'Converted into: %q' "$new_cover"
         # Remove the GIF now that we converted it.
         rm -- "$found_cover"
         found_cover=$new_cover
@@ -516,7 +657,7 @@ function clean_all_file_names {
     local file_title
     local new_basename
     
-    log 'Renaming files...'
+    debug 'Renaming files...'
     
     for file in storage/*/*
     do
@@ -657,6 +798,137 @@ function compute_final_dir_path {
 }
 
 
+# $1    MP3 file.
+# $2    Track number to apply.
+function set_track_number_for_mp3 {
+    : "${1:?No file given.}"
+    : "${2:?No track number given.}"
+    
+    local -a optns
+    
+    optns=(
+        --to-v2.4
+        --no-color
+        --no-tagging-time-frame
+        --track="$2"
+    )
+    
+    eyeD3 "${optns[@]}" "$1" &> /dev/null
+}
+
+
+# $1    FLAC file.
+# $2    Track number to apply.
+function set_track_number_for_flac {
+    : "${1:?No file given.}"
+    : "${2:?No track number given.}"
+    
+    local -a optns
+    
+    optns=(
+        --dont-use-padding
+        --remove-tag=TRACKNUMBER
+        --set-tag="TRACKNUMBER=${2}"
+    )
+    
+    metaflac "${optns[@]}" "$1"
+}
+
+
+# $1    File. MP3 or FLAC, with clear extension.
+# $2    Track number to apply.
+function set_track_number_for_file {
+    : "${1:?No file given.}"
+    : "${2:?No track number given.}"
+    
+    local ext
+    
+    ext=${1##*.}
+    ext=${ext,,}
+    
+    case "$ext" in
+        mp3)
+            set_track_number_for_mp3 "$@"
+            ;;
+        
+        flac)
+            set_track_number_for_flac "$@"
+            ;;
+        
+        *)
+            # Unknown type.
+            return 1
+            ;;
+    esac
+}
+
+
+# $1    Type (mp3 / flac).
+function music_file_precleaning {
+    local type=${1:?No music type given.}
+    
+    local f
+    # Track numbers already used by a track.
+    local -A used_numbers
+    # Files that need a track number, either because they have none
+    # or because the one they use is used by another file.
+    local -a need_numbers
+    local -i num
+    
+    # I think “sort -z” appeared quite late, so let’s not take any risk
+    # and start with making sure there are no newlines in filenames.
+    while read -rd '' f
+    do
+        my_renamer "$f" "$(basename "$f" | tr -d '\n')"
+    done < <(
+        find storage/"$type"/ -type f -iname "*.${type}" -print0
+    )
+    
+    while read -r f
+    do
+        num=$(get_clean_track_number_from_file "$f")
+        
+        # Must be valid AND not already taken.
+        if [ "$num" -ge 1 ] && [ ! "${used_numbers[$num]}" ]
+        then
+            used_numbers[$num]=1
+        else
+            if [ "${used_numbers[$num]}" ]
+            then
+                debug '“%s” needs a new track number (%d already used).' "$(basename "$f")" "$num"
+            else
+                debug '“%s” has no track number.' "$(basename "$f")"
+            fi
+            need_numbers+=("$f")
+        fi
+    done < <(
+        find storage/"$type"/ -type f -iname "*.${type}" | sort -V
+    )
+    
+    # Let’s fill the gaps!
+    for f in "${need_numbers[@]}"
+    do
+        # We need to find the smallest available number.
+        num=1
+        while [ "${used_numbers[$num]}" ]
+        do
+            ((num++)) || true
+        done
+        
+        # Set it in the metadata!
+        if set_track_number_for_file "$f" "$num"
+        then
+            used_numbers[$num]=1
+            debug 'Set track number of “%s” to %d.' "$(basename "$f")" "$num"
+        else
+            warn 'Could not set track number of “%s”.' "$(basename "$f")"
+        fi
+    done
+    
+    return 0
+}
+
+
 function process_one_music_zip {
     local archive=${1:?No ZIP archive given.}
     
@@ -687,6 +959,8 @@ function process_one_music_zip {
     find . -type f -iname "*.${type}" -print0 \
             | xargs -0 -I {} mv {} storage/"$type"/ ||
     return
+    
+    music_file_precleaning "$type"
     
     # Initialise metadata, show it to the user, allow corrections,
     # read it back again.

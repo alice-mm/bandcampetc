@@ -53,3 +53,5 @@ readonly MMETA_PLACEHOLDER='Unknown'
 readonly COVER_LQ_BASENAME='cover_lq.jpg'
 # Given to Lame when creating MP3 files from HQ files.
 readonly CONVERTED_MP3_RATE=128k
+# Set to non empty value to activate debug logs.
+readonly PRINT_DEBUG=''

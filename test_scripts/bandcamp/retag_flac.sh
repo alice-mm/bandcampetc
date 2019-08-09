@@ -21,7 +21,7 @@ function metaflac {
     test "$7" = --remove-tag=DATE
     
     test "$8"       = --set-tag=TITLE='foo bar'
-    test "$9"       = --set-tag=ARTIST='a r t i s t'
+    test "$9"       = --set-tag=ARTIST="$_expected_artist"
     test "${10}"    = --set-tag=ALBUMARTIST='alb ar'
     test "${11}"    = --set-tag=ALBUM='bu bu BUM'
     test "${12}"    = --set-tag=GENRE='Esoteric genre'
@@ -39,4 +39,21 @@ tags[album]='bu bu BUM'
 tags[genre]='Esoteric genre'
 tags[year]=1324
 
-retag_flac foo.flac 'foo bar' tags
+_expected_artist='a r t i s t'
+retag_flac foo.flac 12 'foo bar' tags
+
+
+: With custom artist.
+
+unset -v tags
+declare -A tags
+
+tags[artist]='a r t i s t'
+tags[albumartist]='alb ar'
+tags[album]='bu bu BUM'
+tags[genre]='Esoteric genre'
+tags[year]=1324
+tags[a12]='Cus Tom'
+
+_expected_artist='Cus Tom'
+retag_flac foo.flac 12 'foo bar' tags
