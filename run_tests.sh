@@ -5,7 +5,7 @@ readonly SCR_DIR=$(
     dirname "$(readlink -f -- "$0")"
 )
 
-cd "$SRC_DIR" || exit
+cd "${SCR_DIR:?}" || exit
 
 unset -v to_run
 
