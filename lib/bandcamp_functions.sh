@@ -183,18 +183,38 @@ function try_to_guess_genre {
 }
 
 
+# Yields an int rather than something that could be in a “k/n” format.
+# “0” if no data.
+function get_clean_track_number_from_file {
+    "$MMETA" '%T\n' "${1:?No file given.}" | sed 's:\/.*::g' | awk '{ print int($1) }'
+}
+
+
 function print_metafile_line_for_track {
     : "${1:?No file given.}"
     
     local -i n
     local title
+    local raw_title
     
     # Track number. We just want a nonpadded integer.
     # It might be <n>/<k>, I think, hence the sed removing stuff.
-    n=$(
-        "$MMETA" '%T\n' "$1" | sed 's:\/.*::g' | awk '{ print int($1) }'
-    )
-    title=$("$CAPITASONG" "$("$MMETA" '%t' "$1")")
+    n=$(get_clean_track_number_from_file "$1")
+    
+    raw_title=$("$MMETA" '%t' "$1")
+    if [ "$raw_title" = "$MMETA_PLACEHOLDER" ]
+    then
+        # Use filename as fallback to be able to differentiate tracks
+        # if several have crappy metadata.
+        raw_title=$(
+            basename "$1" | sed -r '
+                s/\.(mp3|flac)$//i
+                s/[_ ]+/ /g
+            '
+        )
+    fi
+    
+    title=$("$CAPITASONG" "$raw_title")
     
     printf '%-7d= %s\n' "$n" "$title"
 }
@@ -778,6 +798,137 @@ function compute_final_dir_path {
 }
 
 
+# $1    MP3 file.
+# $2    Track number to apply.
+function set_track_number_for_mp3 {
+    : "${1:?No file given.}"
+    : "${2:?No track number given.}"
+    
+    local -a optns
+    
+    optns=(
+        --to-v2.4
+        --no-color
+        --no-tagging-time-frame
+        --track="$2"
+    )
+    
+    eyeD3 "${optns[@]}" "$1" &> /dev/null
+}
+
+
+# $1    FLAC file.
+# $2    Track number to apply.
+function set_track_number_for_flac {
+    : "${1:?No file given.}"
+    : "${2:?No track number given.}"
+    
+    local -a optns
+    
+    optns=(
+        --dont-use-padding
+        --remove-tag=TRACKNUMBER
+        --set-tag="TRACKNUMBER=${2}"
+    )
+    
+    metaflac "${optns[@]}" "$1"
+}
+
+
+# $1    File. MP3 or FLAC, with clear extension.
+# $2    Track number to apply.
+function set_track_number_for_file {
+    : "${1:?No file given.}"
+    : "${2:?No track number given.}"
+    
+    local ext
+    
+    ext=${1##*.}
+    ext=${ext,,}
+    
+    case "$ext" in
+        mp3)
+            set_track_number_for_mp3 "$@"
+            ;;
+        
+        flac)
+            set_track_number_for_flac "$@"
+            ;;
+        
+        *)
+            # Unknown type.
+            return 1
+            ;;
+    esac
+}
+
+
+# $1    Type (mp3 / flac).
+function music_file_precleaning {
+    local type=${1:?No music type given.}
+    
+    local f
+    # Track numbers already used by a track.
+    local -A used_numbers
+    # Files that need a track number, either because they have none
+    # or because the one they use is used by another file.
+    local -a need_numbers
+    local -i num
+    
+    # I think “sort -z” appeared quite late, so let’s not take any risk
+    # and start with making sure there are no newlines in filenames.
+    while read -rd '' f
+    do
+        my_renamer "$f" "$(basename "$f" | tr -d '\n')"
+    done < <(
+        find storage/"$type"/ -type f -iname "*.${type}" -print0
+    )
+    
+    while read -r f
+    do
+        num=$(get_clean_track_number_from_file "$f")
+        
+        # Must be valid AND not already taken.
+        if [ "$num" -ge 1 ] && [ ! "${used_numbers[$num]}" ]
+        then
+            used_numbers[$num]=1
+        else
+            if [ "${used_numbers[$num]}" ]
+            then
+                debug '“%s” needs a new track number (%d already used).' "$(basename "$f")" "$num"
+            else
+                debug '“%s” has no track number.' "$(basename "$f")"
+            fi
+            need_numbers+=("$f")
+        fi
+    done < <(
+        find storage/"$type"/ -type f -iname "*.${type}" | sort -V
+    )
+    
+    # Let’s fill the gaps!
+    for f in "${need_numbers[@]}"
+    do
+        # We need to find the smallest available number.
+        num=1
+        while [ "${used_numbers[$num]}" ]
+        do
+            ((num++)) || true
+        done
+        
+        # Set it in the metadata!
+        if set_track_number_for_file "$f" "$num"
+        then
+            used_numbers[$num]=1
+            debug 'Set track number of “%s” to %d.' "$(basename "$f")" "$num"
+        else
+            warn 'Could not set track number of “%s”.' "$(basename "$f")"
+        fi
+    done
+    
+    return 0
+}
+
+
 function process_one_music_zip {
     local archive=${1:?No ZIP archive given.}
     
@@ -808,6 +959,8 @@ function process_one_music_zip {
     find . -type f -iname "*.${type}" -print0 \
             | xargs -0 -I {} mv {} storage/"$type"/ ||
     return
+    
+    music_file_precleaning "$type"
     
     # Initialise metadata, show it to the user, allow corrections,
     # read it back again.

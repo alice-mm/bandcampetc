@@ -52,6 +52,9 @@ _params=(
     'a −a a'          'A – A A'
     'a − a a'         'A – A A'
     $'a \t − \t a a'  'A – A A'
+    
+    'Tim Bowness - the Warm-up Man Forever'
+    'Tim Bowness – The Warm-up Man Forever'
 )
 
 for ((i = 0;  i < ${#_params[@]} - 1;  i += 2))
