@@ -79,3 +79,24 @@ GENRE       = lsi nrnrnr lsi
 # 6, 7, 8 and 13.
 _EXPECTED_
 )"
+
+
+MMETA_PLACEHOLDER=jrijri
+
+function mock_mmeta {
+    case "$1" in
+        '%T\n')
+            echo 03/009
+            ;;
+        
+        '%t')
+            echo jrijri
+            ;;
+        
+        *)
+            exit 1
+            ;;
+    esac
+}
+
+test "$(print_metafile_line_for_track 'foo bar')" = '3      = Foo Bar'
