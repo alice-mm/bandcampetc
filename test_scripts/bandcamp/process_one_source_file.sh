@@ -68,7 +68,7 @@ function retag_flac {
     
     if (
         IFS=','
-        test "$*" = storage/flac/foo.flac,'The title of track eight',meta
+        test "$*" = storage/flac/foo.flac,8,'The title of track eight',meta
     )
     then
         _tagged_flac=1
