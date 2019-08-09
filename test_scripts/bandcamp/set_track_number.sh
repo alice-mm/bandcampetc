@@ -19,7 +19,7 @@ function eyeD3 {
 
 set_track_number_for_mp3 foo/bar.mp3 42
 test ${#_calls[@]} -eq 1
-test "${_calls[0]}" = '--no-color --no-tagging-time-frame --track=42 foo/bar.mp3'
+test "${_calls[0]}" = '--to-v2.4 --no-color --no-tagging-time-frame --track=42 foo/bar.mp3'
 
 # Should fail if tagging fails.
 function eyeD3 { false; }
