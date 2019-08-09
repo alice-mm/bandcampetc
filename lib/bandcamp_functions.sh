@@ -396,7 +396,7 @@ function read_metafile {
             [aA]*[0-9]*)
                 while read -r one_num_for_override
                 do
-                    t["a${one_num_for_override}"]=$val
+                    t[a${one_num_for_override}]=$val
                     
                     debug 'Track %d custom artist: %q' "$one_num_for_override" "$val"
                 done < <(get_override_track_nums "$key")
