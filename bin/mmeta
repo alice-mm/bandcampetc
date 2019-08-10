@@ -115,6 +115,7 @@ do
         e)
             unset -v PLACEHOLDER
             ;;
+        *)  ;;
     esac
 done
 shift $((OPTIND - 1))

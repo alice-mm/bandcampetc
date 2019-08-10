@@ -10,8 +10,8 @@ needed=(
     mogrify
 )
 
-: ${1:?Please provide a JPG file.}
-COVER_LQ_BASENAME="${2:-cover_lq.jpg}"
+: "${1:?Please provide a JPG file.}"
+COVER_LQ_BASENAME=${2:-cover_lq.jpg}
 
 for dep in "${needed[@]}"
 do
@@ -28,7 +28,7 @@ cp "$1" "$cover_lq" || exit
 
 size_orig=$(du -b "$1" | cut -f1)
 
-read dims_orig_x dims_orig_y < <(
+read -r dims_orig_x dims_orig_y < <(
     identify -ping -format '%[fx:w] %[fx:h]' "$1"
 )
 
@@ -89,6 +89,6 @@ printf ' LQ → “%s” (resize: %s; quality: %s) (%s)\n' \
                 s/x/×/
             ' <<< "${resize:-100%}"
         )" "${quality:-100}" \
-        $(du -h "$cover_lq" | cut -f 1)
+        "$(du -h "$cover_lq" | cut -f 1)"
 
 exit 0
