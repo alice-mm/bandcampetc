@@ -75,14 +75,14 @@ do
     fi
     
     # Removing trailing slash to make echoes more pretty (no "a//b").
-    dir="$(sed 's%/\+$%%' <<< "$dir")"
+    dir=$(sed 's%/\+$%%' <<< "$dir")
     
     echo "Directory:"$'\t'"\"$dir\""
     
     cover="$(find "$dir" -maxdepth 1 -type f -iregex '.*\.jpe?g$' -print -quit)"
     if [ "$cover" ]
     then
-        echo "Found “$cover”. Skipping directory."
+        echo "Found “${cover}”. Skipping directory."
         continue
     fi
     
@@ -90,9 +90,9 @@ do
     # of "mp3"s in my own files, somewhere, and I don't even know why.
     file="$(find "$dir" -maxdepth 1 -type f -iname '*.mp3' -print -quit)"
     
-    if [ ! "$file" -a "$MMETA" -a "$METAFLAC" ]
+    if [ -z "$file" ] && [ "$MMETA" ] && [ "$METAFLAC" ]
     then
-        file="$(find "$dir" -maxdepth 1 -type f -iname '*.flac' -print -quit)"
+        file=$(find "$dir" -maxdepth 1 -type f -iname '*.flac' -print -quit)
         type='flac'
     else
         type='mp3'
@@ -116,7 +116,7 @@ do
         fi
     )"
     
-    if [ "$MMETA" -a ! "$id" ]
+    if [ "$MMETA" ] && [ ! "$id" ]
     then
         # We will have to look for the ID on the Internet...
         query_url="$("$MMETA" 'https://musicbrainz.org/search?query=%a+%A&type=release' "$file")"
@@ -148,7 +148,7 @@ do
         url="$(echo "$json" | grep -om 1 '"http://[^"]*\.jpg"' | head -1 | tr -d '"')"
     fi
     
-    if [ "$MMETA" -a -z "$url" ]
+    if [ "$MMETA" ] && [ -z "$url" ]
     then
         # Perform a search on Wikipedia with:
         # "album_name (artist_name album)".
@@ -159,7 +159,7 @@ do
         url="$(get_wiki "$release_page")"
     fi
     
-    if [ "$MMETA" -a -z "$url" ]
+    if [ "$MMETA" ] && [ -z "$url" ]
     then
         # Perform a search on Wikipedia with:
         # "album_name (album)".
@@ -168,7 +168,7 @@ do
         url="$(get_wiki "$release_page")"
     fi
     
-    if [ -z "$url" -a "$id" ]
+    if [ -z "$url" ] && [ "$id" ]
     then
         # Sometimes, the cover does not seem to be approved by MusicBrainz but
         # there can still be a jpg file somewhere in the release page.
@@ -181,7 +181,7 @@ do
         )"
     fi
     
-    if [ "$MMETA" -a ! "$url" ]
+    if [ "$MMETA" ] && [ ! "$url" ]
     then
         # Another try on Wikipedia, without the "(album)" part in the query.
         release_page='https://en.wikipedia.org/w/index.php?search='"$album_title"'&title=Special%3ASearch'

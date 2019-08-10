@@ -76,7 +76,7 @@ function f_tag_flac {
     
     # For all block numbers coresponding to front covers.
     nb_removed=0
-    while read -d $'\n' block_num
+    while read -rd $'\n' block_num
     do
         metaflac --dont-use-padding --remove --block-number="${block_num}" "$1" 2>&1 > /dev/null \
                 | sed 's/^/metaflac: /'

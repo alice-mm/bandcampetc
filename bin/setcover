@@ -45,6 +45,7 @@ glob_errors=0
 METAFLAC=metaflac
 
 
+# shellcheck source=../lib/setcover_functions.sh
 . "$SCR_DIR"/../lib/setcover_functions.sh || exit
 
 
@@ -60,7 +61,7 @@ then
 
     mime="$(file -b --mime-type "$pic")"
 
-    if [ "$mime" != 'image/png' -a "$mime" != 'image/jpeg' ]
+    if [ "$mime" != 'image/png' ] && [ "$mime" != 'image/jpeg' ]
     then
         echo "$(basename "$0"): Error: \"$pic\" does not seem to be a JPG nor a PNG file." >&2
         exit 3
