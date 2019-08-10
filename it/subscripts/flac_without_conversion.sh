@@ -5,6 +5,7 @@ set -evx
 cp -v it/assets/fake_album_flac_version.zip ~/Downloads/
 ./bin/bandcamp
 
+
 test "$(
     find ~/Music/ -type f | sort -V
 )" = "$(

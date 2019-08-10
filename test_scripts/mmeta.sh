@@ -14,8 +14,8 @@ readonly THE_SCRIPT=bin/mmeta
         printf '%s\n' "$_data_flac"
     }
     export -f eyeD3 metaflac
-    unset -v _data_mp3 _data_flac
-    export _data_mp3 _data_flac
+    unset -v _data_mp3 _data_flac _data_mp3_recent_eyed3
+    export _data_mp3 _data_flac _data_mp3_recent_eyed3
     
     _data_mp3=$(
         cat << '_MOCK_DATA_'
@@ -61,6 +61,26 @@ _MOCK_DATA_
     )
     
     fake_mp3_file=$(mktemp "${TMPDIR:-/tmp}"/mmeta-test-XXXXXXXX.mp3)
+    
+    _data_mp3_recent_eyed3=$(
+        cat << '_MOCK_DATA_'
+-------------------------------------------------------------------------------
+/root/Music/alice/fake_album/mp3/4_-_four.mp3                     [ 28.36 KB ]
+-------------------------------------------------------------------------------
+Time: 00:01	MPEG2, Layer III	[ 128 kb/s @ 8000 Hz - Mono ]
+-------------------------------------------------------------------------------
+ID3 v2.4:
+title: Four
+artist: Alice
+album: Fake Album
+album artist: None
+release date: 2019
+eyed3.id3:WARNING: Non standard genre name: Experimental
+track: 4/4		genre: Experimental (id None)
+FRONT_COVER Image: [Size: 1382 bytes] [Type: image/jpeg]
+Description:
+_MOCK_DATA_
+    )
     
     _data_flac=$(
         cat << '_MOCK_DATA_'
@@ -132,6 +152,22 @@ _MOCK_DATA_
 ${fake_mp3_file}
 Cult of Luna, “Echoes” [59:09, 13.50 MB]
 	(“Salvation”, 2004, Post-Metal)
+
+_EXPECTED_
+    )"
+    
+    function eyeD3 {
+        printf '%s\n' "$_data_mp3_recent_eyed3"
+    }
+    
+    test "$(
+        "$THE_SCRIPT" '\n%f\n%a, “%t” [%l, %s]\n\t(“%A”, %y, %g)\n\n' "$fake_mp3_file"
+    )" = "$(
+        cat << _EXPECTED_
+
+${fake_mp3_file}
+Alice, “Four” [00:01, 128 kb/s @ 8000 Hz - Mono]
+	(“Fake Album”, 2019, Experimental)
 
 _EXPECTED_
     )"

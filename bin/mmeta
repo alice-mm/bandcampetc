@@ -168,14 +168,14 @@ do
     # The "t l; d; :l; q" part is a conditional branching allowing us to quit
     # at the first match. "l" is the label name. This is important because
     # there might be weird comments in the metadata, at the end of the data.
-    a=$(sed -n 's/^[Aa]rtist: //p; t l; d; :l; q'                       <<< "$data" | escape_stuff | replace_if_empty)
-    t=$(sed -n 's/^[Tt]itle: //p; t l; d; :l; q'                        <<< "$data" | escape_stuff | replace_if_empty)
-    A=$(sed -n 's/^[Aa]lbum: //p; t l; d; :l; q'                        <<< "$data" | escape_stuff | replace_if_empty)
-    T=$(sed -n 's/^[Tt]rack\(number\)\?: //p; t l; d; :l; q'            <<< "$data" | escape_stuff | replace_if_empty)
-    l=$(sed -n 's/^[Tt]ime: //p; t l; d; :l; q'                         <<< "$data" | escape_stuff | replace_if_empty)
-    g=$(sed -n 's/^[Gg]enre: \([^(]*\)\( (.*)\)\?/\1/p; t l; d; :l; q'  <<< "$data" | escape_stuff | replace_if_empty)
-    y=$(sed -n 's/^\([Yy]ear\|[Dd]ate\): //p; t l; d; :l; q'            <<< "$data" | escape_stuff | replace_if_empty)
-    s=$(sed -n 's/^\[ \([^]]*\) \]$/\1/p; t l; d; :l; q'                <<< "$data" | escape_stuff | replace_if_empty)
+    a=$(sed -n  's/^[Aa]rtist: //p                      ; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)
+    t=$(sed -n  's/^[Tt]itle: //p                       ; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)
+    A=$(sed -n  's/^[Aa]lbum: //p                       ; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)
+    T=$(sed -n  's/^[Tt]rack\(number\)\?: //p           ; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)
+    l=$(sed -n  's/^[Tt]ime: //p                        ; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)
+    g=$(sed -n  's/^[Gg]enre: \([^(]*\)\( (.*)\)\?/\1/p ; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)
+    y=$(sed -nr 's/^([Yy]ear|([Rr]elease )?[Dd]ate): //p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)
+    s=$(sed -n  's/^\[ \([^]]*\) \]$/\1/p               ; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)
     f=$(escape_stuff <<< "$f")
     
     sed "
