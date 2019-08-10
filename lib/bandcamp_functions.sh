@@ -130,6 +130,7 @@ function retag_flac {
     fi
     
     local -a optns
+    local -i safe_year
     
     optns=(
         --dont-use-padding
@@ -146,8 +147,16 @@ function retag_flac {
         --set-tag="ALBUMARTIST=${t[albumartist]}"
         --set-tag="ALBUM=${t[album]}"
         --set-tag="GENRE=${t[genre]}"
-        --set-tag="DATE=${t[year]}"
     )
+    
+    safe_year=$(tr -cd '0-9' <<< "${t[year]}")
+    
+    if [ "$safe_year" ] && [ "$safe_year" -gt 0 ]
+    then
+        optns+=(
+            --set-tag="DATE=${safe_year}"
+        )
+    fi
     
     metaflac "${optns[@]}" "$1"
 }
@@ -491,13 +500,14 @@ function retag_mp3 {
         local -n t=${4:?No array name given.}
     fi
     
+    local out
     local -a optns
+    local -i safe_year
     
     optns=(
         --no-color
         --remove-all
-        --no-tagging-time-frame
-        --set-encoding=utf8
+        "${EYED3_ENCODING_OPT[@]}"
         
         --artist="$(get_artist_for_track "$2" t)"
         --album="${t[album]}"
@@ -505,13 +515,24 @@ function retag_mp3 {
         --track="${2:?No track number given.}"
         --track-total="${t[maxtrack]}"
         --genre="${t[genre]}"
-        --year="${t[year]}"
     )
     
-    if eyeD3 "${optns[@]}" "${1:?No file given.}" &> /dev/null
+    safe_year=$(tr -cd '0-9' <<< "${t[year]}")
+    
+    if [ "$safe_year" ] && [ "$safe_year" -gt 0 ]
+    then
+        optns+=(
+            -Y "$safe_year"
+        )
+    fi
+    
+    if out=$(
+            eyeD3 "${optns[@]}" "${1:?No file given.}" 2>&1
+        )
     then
         return 0
     else
+        printf '%s\n' "$out" >&2
         error_while_tagging_mp3 "${optns[@]}"
         return 1
     fi
@@ -809,7 +830,6 @@ function set_track_number_for_mp3 {
     optns=(
         --to-v2.4
         --no-color
-        --no-tagging-time-frame
         --track="$2"
     )
     
