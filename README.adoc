@@ -41,11 +41,11 @@ Bash version ≥ 4::  Because associative arrays. Should already be OK excep
 
 ImageMagick::   To manipulate cover art. (`imagemagick` package.)
 
-`awk`::         “Pattern scanning and processing language.” GNU’s `gawk` implementation recommended, but `mawk` should be enough.
+`awk`::         “Pattern scanning and processing language.” GNU’s `gawk` implementation recommended, but the minimal implementation `mawk` does the job.
 
 `geany`::       … as a recommended simple text editor to revise music metadata. You can use any other editor by changing a constant’s value in `config/bandcamp.sh`.
 
-`ffmpeg` or `avconv`::  For FLAC → MP3 conversions. *(Optional)*
+`ffmpeg` or `avconv`::  For FLAC → MP3 conversions. *(Optional, see <<convert-config,the config section>>.)*
 
 On Ubuntu and Debian machines, this should be enough to get everything:
 
@@ -169,6 +169,7 @@ Remember to check that the “Appearance Conditions” are broad enough.
 
 Various settings can be changed in the `config/bandcamp.sh` file.
 
+[#convert-config]
 ## Converting FLAC files to MP3s
 
 To get both a FLAC and an MP3 version of your records, check the part of `config/bandcamp.sh` that looks like this:
