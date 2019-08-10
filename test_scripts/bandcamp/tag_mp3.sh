@@ -83,3 +83,49 @@ meta['a42']='Cus Tom'
 _expected_artist='Cus Tom'
 retag_mp3 dest.mp3 42 'lsilsi jrejre' meta
 test "$(cat "$callfile")" = ok
+
+
+: Setup to stop expecting dates because I will give invalid ones.
+function eyeD3 {
+    echo called > "$callfile"
+    
+    local -a expected_args=(
+        --no-color
+        --remove-all
+        "${EYED3_ENCODING_OPT[@]}"
+        
+        --artist="$_expected_artist"
+        --album='C d Ef'
+        --title='lsilsi jrejre'
+        --track=42
+        --track-total=98
+        --genre=Genre
+        
+        dest.mp3
+    )
+    
+    # Compare array. A bit sloppy, but let’s assume
+    # the args do not contain pipes themselves.
+    if ( IFS='|'; [ "$*" = "${expected_args[*]}" ] )
+    then
+        echo ok > "$callfile"
+    fi
+    
+    return "$_status"
+}
+
+unset -v meta
+declare -A meta=(
+    [artist]='a b'
+    [album]='C d Ef'
+    [maxtrack]=98
+    [genre]=Genre
+    [year]='Grosse poire'
+)
+
+_status=0
+
+> "$callfile"
+_expected_artist='a b'
+retag_mp3 dest.mp3 42 'lsilsi jrejre' meta
+test "$(cat "$callfile")" = ok
