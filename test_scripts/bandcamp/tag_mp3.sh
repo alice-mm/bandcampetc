@@ -6,14 +6,23 @@ set -evx
 . lib/bandcamp_functions.sh
 
 
+unset -v EYED3_ENCODING_OPT
+EYED3_ENCODING_OPT=(foo bar plop)
+
+
+callfile=$(mktemp "${TMPDIR:-/tmp}"/bandcamp-test-tag-mp3-XXXXXXXX)
+test "$callfile"
+test -r "$callfile"
+test -w "$callfile"
+
+
 function eyeD3 {
-    _called=1
+    echo called > "$callfile"
     
     local -a expected_args=(
         --no-color
         --remove-all
-        --no-tagging-time-frame
-        --set-encoding=utf8
+        "${EYED3_ENCODING_OPT[@]}"
         
         --artist="$_expected_artist"
         --album='C d Ef'
@@ -21,7 +30,7 @@ function eyeD3 {
         --track=42
         --track-total=98
         --genre=Genre
-        --year=1899
+        -Y 1899
         
         dest.mp3
     )
@@ -30,7 +39,7 @@ function eyeD3 {
     # the args do not contain pipes themselves.
     if ( IFS='|'; [ "$*" = "${expected_args[*]}" ] )
     then
-        _ok=1
+        echo ok > "$callfile"
     fi
     
     return "$_status"
@@ -55,25 +64,22 @@ declare -A meta=(
     [year]=1899
 )
 
-unset -v _called _ok
+> "$callfile"
 _expected_artist='a b'
 retag_mp3 dest.mp3 42 'lsilsi jrejre' meta
-test "$_called"
-test "$_ok"
+test "$(cat "$callfile")" = ok
 
 _status=1
 
-unset -v _called _ok
+> "$callfile"
 _expected_artist='a b'
 ! retag_mp3 dest.mp3 42 'lsilsi jrejre' meta
-test "$_called"
-test "$_ok"
+test "$(cat "$callfile")" = ok
 
 : With custom artist.
 _status=0
-unset -v _called _ok
+> "$callfile"
 meta['a42']='Cus Tom'
 _expected_artist='Cus Tom'
 retag_mp3 dest.mp3 42 'lsilsi jrejre' meta
-test "$_called"
-test "$_ok"
+test "$(cat "$callfile")" = ok

@@ -1,7 +1,8 @@
 # Bandcamp, etc. (`bandcampetc`)
 :toc:
+:toclevels: 0
 
-Scripts to keep music tidy. The main one extracts and cleans files from https://bandcamp.com/[Bandcamp] and Amazon Music downloads. It should work with pretty much any ZIP archive that contains MP3 or FLAC files, actually.
+Scripts to keep music tidy. The main one extracts and cleans files from https://bandcamp.com/[Bandcamp] and Amazon Music downloads. It should work with pretty much any ZIP archive that contains MP3 or FLAC files, actually. <<sample-exec,See example below.>>
 
 
 # Getting started
@@ -30,6 +31,7 @@ The `bandcamp` script relies on:
 Bash version ≥ 4::  Because associative arrays. Should already be OK except maybe on old Macs.
 
 `eyeD3`::       Manipulate MP3 metadata. Note that the software’s package is generally called `eyed3`.
+                These guys often break backward compatibility… I adapted my commands at least to versions `0.6.18` (Ubuntu 16) and `0.7.10` (Debian 9). <<contact-section,Tell me>> if you get “unrecognized arguments” errors.
 
 `metaflac`::    Manipulate FLAC metadata. Bundled with the `flac` package.
 
@@ -201,10 +203,14 @@ readonly EDITOR=(geany -i)
 
 The commented out lines give you examples for other editors than Geany. Uncomment one of them (while commenting the others), or write your own assignment.
 
-NOTE: I use an indexed array rather than a dumb string to make the script more robust: you can use parameters that contain spaces: `readonly EDITOR=(foo -f 'bar plop' -M)`.
+NOTE: I use an indexed array rather than a dumb string to make the script more robust: you can use parameters that contain spaces: `readonly EDITOR=(foo -f 'bar plop' -M)`
+
+TIP: To make the script run without any interaction, use a no-op or any idle-ish command as an editor: `readonly EDITOR=(:)`
 
 
-# Unit tests
+# Tests
+
+## Unit tests
 
 I love trying to do unit testing in Bash. Just run `./run_tests.sh` and a bunch of commands will be executed. The first failure stops the execution (`set -e`) and you should be able to see what failed in the output.
 
@@ -224,6 +230,12 @@ $ ./run_tests.sh test_scripts/mmeta.sh test_scripts/setcover.sh
 ====
 
 
+## Integration tests
+
+The `run_integration_tests.sh` script runs the unit tests as well as the `bandcamp` script in a Debian 9 Docker container. Nothing fancy for now as I’m no Docker expert, but it allowed me to improve stuff already.
+
+
+[#sample-exec]
 # Sample execution of `bandcamp`
 
 With one ZIP from https://giftsfromenola.bandcamp.com/album/from-fathoms in `~/Downloads/`:
@@ -300,6 +312,7 @@ bandcamp: End.
 ```
 
 
+[#contact-section]
 # Contact
 
 image::http://www.alicem.net/contact.jpg[Contact email]
