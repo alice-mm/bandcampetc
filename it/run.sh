@@ -17,7 +17,7 @@ sed -i '
 ' config/bandcamp.sh
 
 # Run UTs for good measure.
-#./run_tests.sh
+./run_tests.sh
 
 # Make sure there is a Downloads directory.
 # Idem for Music directory.
