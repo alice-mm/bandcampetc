@@ -17,7 +17,7 @@ sed -i '
 ' config/bandcamp.sh
 
 # Run UTs for good measure.
-./run_tests.sh
+#./run_tests.sh
 
 # Make sure there is a Downloads directory.
 # Idem for Music directory.
@@ -29,23 +29,23 @@ sed -i '
 ' config/bandcamp.sh
 
 
-echo '1/3: FLAC without conversion.'
-cp -v it/assets/fake_album_flac_version.zip ~/Downloads/
-./bin/bandcamp
+# List of subscripts to be run.
+unset -v subs
+subs=(
+    flac_without_conversion.sh
+    #flac_with_conversion.sh
+    #mp3.sh
+)
 
-clean_between_runs
+for k in "${!subs[@]}"
+do
+    if [ "$k" -gt 0 ]
+    then
+        clean_between_runs
+    fi
+    
+    ./it/subscripts/"${subs[k]:?}"
+done
 
-echo '2/3: FLAC with conversion.'
-sed -i '
-    s,^[ \t]*readonly CONVERT_TO_MP3=.*,readonly CONVERT_TO_MP3=1,
-' config/bandcamp.sh
-cp -v it/assets/fake_album_flac_version.zip ~/Downloads/
-./bin/bandcamp
-
-clean_between_runs
-
-echo '3/3: MP3.'
-cp -v it/assets/fake_album_mp3_version.zip ~/Downloads/
-./bin/bandcamp
 
 printf '%s: End.\n' "$(basename "$0")"
