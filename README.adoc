@@ -96,16 +96,7 @@ Try to fetch cover arts from various sources. An old ugly script of mine. Don’
 
 ## `setcover`
 
-I like to add the cover art in the music files’ metadata. This way, even devices such as cars with no Internet access or whatever are able to display cover arts when playing music. The `setcover` script embed a cover art in MP3 and FLAC files:
-
-```
-setcover: Syntax to tag FILE with PICTURE:
-    setcover FILE PICTURE
-Give an empty string for PICTURE to remove covers.
-Note that any previous picture will be removed either way.
-If FILE is a directory, FILE/*.mp3 and FILE/*.MP3 will be targeted.
-If "metaflac" is installed, FLAC files will also be processed.
-```
+I like to add the cover art in the music files’ metadata. This way, even devices such as cars with no Internet access or whatever are able to display cover arts when playing music. The `setcover` script embed a cover art in MP3 and FLAC files. See `setcover -h` for help.
 
 
 ## `create-lq-cover`
