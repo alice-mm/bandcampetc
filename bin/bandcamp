@@ -170,7 +170,7 @@ IFS=$' \t\n'
 
 cd "$DIR_TEMP" || exit
 
-for archive in ~/{Téléchargements,Downloads}/*.{zip,ZIP} "$@"
+for archive in ~/{Téléchargements,Downloads,Descargas,Transferências,Загрузки,İndirilenler,téléchargements,downloads,descargas,transferências,загрузки}/*.{zip,ZIP} "$@"
 do
     # Skip unmatched patterns and unreadable files.
     if [ ! -r "$archive" ]

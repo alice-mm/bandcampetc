@@ -3,13 +3,22 @@
 #
 #   readonly DIR_M=/home/you/some/dir
 #
-# I mostly needed to support French and English installs.
-if [ -d ~/Musique ]
-then
-    readonly DIR_M=~/Musique
-else
-    readonly DIR_M=~/Music
-fi
+# English last to use as fallback if none exist:
+for one_dir in ~/{Musique,Música,Musik,Muziek,Музыка,Muzyka,Musica,Müzik,Music}
+do
+    if [ -d "$one_dir" ]
+    then
+        break
+    fi
+    
+    # Try in lowercase.
+    if [ -d "${one_dir,,}" ]
+    then
+        one_dir=${one_dir,,}
+        break
+    fi
+done
+readonly DIR_M=$one_dir
 
 # Set to non empty value to convert FLAC files to MP3.
 # I used to keep everything in both formats, and then ran out of space.
