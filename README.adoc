@@ -188,6 +188,16 @@ To turn the feature on, change this line to:
 CONVERT_TO_MP3=1
 --
 
+[TIP]
+====
+To activate conversion for one specific run, you can use the `-c` option:
+
+[source, bash]
+--
+$ bandcamp -c
+--
+====
+
 
 ## Editor
 
