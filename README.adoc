@@ -238,7 +238,7 @@ run_tests.sh: All done (22 files).
 For development purposes, you can run a subset of the test scripts by passing them as arguments:
 
 ```
-$ ./run_tests.sh test_scripts/mmeta.sh test_scripts/setcover.sh
+$ ./run_tests.sh test_scripts/mmeta.sh test_scripts/setcover/gettype.sh
 ```
 ====
 
