@@ -4,7 +4,7 @@ set -evx
 
 
 cp -v it/assets/fake_album_mp3_version.zip ~/Downloads/
-./bin/bandcamp
+./bin/bandcamp -d
 
 
 test "$(

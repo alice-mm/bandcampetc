@@ -10,12 +10,6 @@ set -evx
 # Go to project.
 cd /bc/
 
-
-# Turn debug logs ON.
-sed -i '
-    s,^[ \t]*readonly PRINT_DEBUG=.*,readonly PRINT_DEBUG=1,
-' config/bandcamp.sh
-
 # Run UTs for good measure.
 ./run_tests.sh
 

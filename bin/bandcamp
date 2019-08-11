@@ -1,19 +1,36 @@
 #! /usr/bin/env bash
 
-# Version: 2019y08m03d
+function bandcamp_help {
+    cat << _HELP_
 
-# Clean music downloads.
+  “bandcamp” – Clean music downloads.
 
-# For every ZIP file in the download folder:
-# * take the content,
-# * convert it to MP3 if it is FLAC, (disabled; see CONVERT_TO_MP3 constant)
-# * find a cover if there are none,
-# * apply it to the files, and
-# * store all this in the music directory.
+  For every ZIP file in the download folder:
+    1. take the content,
+    2. Optional: convert it to MP3 if it is a FLAC record,
+    3. find a cover if there are none,
+    4. apply the cover to the files, and
+    5. store all this in the music directory.
 
-# Note that since all you need are zips containing mp3 or flac files, this
-# can work for lots of downloads (e.g., Amazon Music), even though I initially
-# wrote this for Bandcamp purchases.
+  Note that since all you need are ZIPs containing MP3 or FLAC files,
+  this can work for lots of downloads (e.g., Amazon Music),
+  even though I initially wrote this for Bandcamp purchases.
+
+  Options:
+
+    -c  Activate FLAC → MP3 conversion for this run, regardless of
+        the value of CONVERT_TO_MP3 in the configuration file.
+
+    -d  Activate debug logs for this run, regardless of the
+        value of PRINT_DEBUG in the configuration file.
+
+    -h  Display this help.
+
+  https://github.com/alice-mm/bandcampetc
+  http://www.alicem.net/
+
+_HELP_
+}
 
 
 # Get the name of the directory the current script sits in.
@@ -24,6 +41,28 @@ readonly SCR_DIR=$(
 # shellcheck source=../config/bandcamp.sh
 . "$SCR_DIR"/../config/bandcamp.sh || exit
 
+
+OPTIND=1
+while getopts 'cdh' opt
+do
+    case "$opt" in
+        d)  PRINT_DEBUG=1;;
+        c)  CONVERT_TO_MP3=1;;
+        
+        h)
+            bandcamp_help
+            exit 0
+            ;;
+        
+        *)
+            exit 1
+            ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+
+readonly PRINT_DEBUG CONVERT_TO_MP3
 
 readonly MMETA=${SCR_DIR}/mmeta
 readonly COVERS=${SCR_DIR}/covers
