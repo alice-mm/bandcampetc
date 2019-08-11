@@ -5,7 +5,9 @@ function bandcamp_help {
 
   “bandcamp” – Clean music downloads.
 
-  For every ZIP file in the download folder:
+  Usage: $(printf '%q' "$(basename "$0")") [OPTION]... [ZIP]...
+
+  For every ZIP file in the download directory or given as argument:
     1. take the content,
     2. Optional: convert it to MP3 if it is a FLAC record,
     3. find a cover if there are none,
@@ -168,7 +170,7 @@ IFS=$' \t\n'
 
 cd "$DIR_TEMP" || exit
 
-for archive in ~/{Téléchargements,Downloads}/*.{zip,ZIP}
+for archive in ~/{Téléchargements,Downloads}/*.{zip,ZIP} "$@"
 do
     # Skip unmatched patterns and unreadable files.
     if [ ! -r "$archive" ]
@@ -176,7 +178,20 @@ do
         continue
     fi
     
+    # Normalize, and avoid getting mime types
+    # like “inode/symlink” at the ZIP test.
+    archive=$(readlink -f -- "$archive")
+    
     log 'Inspecting “%s”...' "$archive"
+    
+    # Is it a valid ZIP? Note that empty ones might fail the test, as
+    # they count as “application/octet-stream”, but of course there
+    # is no music in empty archives, so /shrug.
+    if [ "$(file -b --mime-type "$archive")" != application/zip ]
+    then
+        log 'Not a valid ZIP? Skipping.'
+        continue
+    fi
     
     # Is there music in the ZIP?
     if ! mp3_or_flac_in_zip "$archive"
