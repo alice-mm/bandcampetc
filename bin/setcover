@@ -52,7 +52,7 @@ then
 fi
 
 
-glob_errors=0
+declare -i glob_errors=0
 
 
 METAFLAC=metaflac
@@ -81,7 +81,7 @@ then
     fi
 fi # /if pic not empty
 
-target="$1"
+target=$1
 
 if [ ! -e "$target" ]
 then
@@ -98,19 +98,25 @@ fi
 if [ -d "$target" ]
 then
     # TARGETING A DIRECTORY
-    target=$(sed 's:/\+$::' <<< "$target")
-    find "$target" -maxdepth 1 -type f -iregex '.*\.\(mp3\|flac\)' -print0 | while read -rd '' file
+    # Simplify path to get prettier logs.
+    target=$(readlink -f -- "$target")
+    while read -rd '' file
     do
-        test -f "$file" || continue
-        test -r "$file" || continue
-        
         f_single_file "$file" "$pic"
-    done
+    done < <(
+        find "$target" -maxdepth 1 \
+            -type f -readable -iregex '.*[^/]\.\(mp3\|flac\)' -print0
+    )
 else
     # TARGETING A SINGLE FILE
     f_single_file "$target" "$pic"
 fi
 
-echo "End of $(basename "$0"). ${glob_errors} error(s)."
+printf '%s: End. %d error·s.\n' "$(basename "$0")" "$glob_errors"
 
-exit 0
+if [ "$glob_errors" -eq 0 ]
+then
+    exit 0
+else
+    exit 1
+fi
