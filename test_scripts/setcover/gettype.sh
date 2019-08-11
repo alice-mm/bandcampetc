@@ -2,8 +2,6 @@
 
 set -evx
 
-readonly THE_SCRIPT=bin/setcover
-
 # shellcheck source=../../lib/setcover_functions.sh
 . lib/setcover_functions.sh
 

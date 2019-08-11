@@ -49,8 +49,8 @@ function f_tag {
     then
         echo "OK"
     else
-        echo "Error? ($?)"
-        ((glob_errors++))
+        echo "Error: $?"
+        return 1
     fi
     
     if [ "$2" ]
@@ -61,10 +61,34 @@ function f_tag {
         then
             echo "OK"
         else
-            echo "Error? ($?)"
-            ((glob_errors++))
+            echo "Error: $?"
+            return 1
         fi
     fi
+}
+
+
+# $1    FLAC file.
+# stdout →  comma-separated list of block numbers corresponding
+#           to PICTURE type metadata blocks.
+function get_flac_cover_front_block_nums {
+    local out
+    
+    out=$(metaflac --list --block-type PICTURE "${1:?No file given.}") || return
+    
+    out=$(
+        grep -Ex 'METADATA block #[0-9]+' <<< "$out" | tr -cd '0-9\n'
+    )
+    
+    if [ "$out" ]
+    then
+        # Print as comma-separated list.
+        printf '%s\n' "${out//$'\n'/,}"
+    fi
+
+    # Be happy even if no block found.
+    # What matters is that “metaflac” did not crash.
+    return 0
 }
 
 
@@ -72,44 +96,37 @@ function f_tag {
 # $2    A picture to be used as a FRONT_COVER, or an empty string if the
 #       images must be removed from the file.
 function f_tag_flac {
+    : "${1:?No file given.}"
+    
+    local block_nums
+    
     printf '%s: Removing images from “%s”...\n' "$(basename "$0")" "$1"
     
-    # For all block numbers coresponding to front covers.
-    nb_removed=0
-    while read -r block_num
-    do
+    block_nums=$(get_flac_cover_front_block_nums "$1")
+    
+    if [ "$block_nums" ]
+    then
         if metaflac --dont-use-padding --remove \
-                --block-number="${block_num}" "$1" 2>&1 > /dev/null \
+                --block-number="$block_nums" "$1" 2>&1 > /dev/null \
                 | sed 's/^/metaflac: /'
         then
             echo 'OK'
-            ((nb_removed++))
         else
-            echo "Error? ($?)"
-            ((glob_errors++))
+            echo "Error: $?"
+            return 1
         fi
-    done < <(
-        # There are several blocks, each with a number, and the number is a few
-        # lines above the "type: 3 (Cover (front))" part.
-        metaflac --list "$1" \
-                | tac \
-                | sed -n '
-                    # From "blahblah cover front" to "metadata block <number>",
-                    # print the numbers.
-                    /^  type: 3 (Cover (front))$/,/^METADATA block #[0-9]\+$/ s/METADATA block #\([0-9]\+\)/\1/p
-                ' \
-                | grep -x '[0-9]\+'
-    )
+    fi
     
     if [ "$2" ]
     then
         printf '%s: “%s” → “%s”...\n' "$(basename "$0")" "$2" "$1"
-        if metaflac --import-picture-from "$2" "$1" 2>&1 > /dev/null | sed 's/^/metaflac: /'
+        if metaflac --dont-use-padding --import-picture-from "$2" "$1" 2>&1 > /dev/null \
+                | sed 's/^/metaflac: /'
         then
             echo 'OK'
         else
-            echo "Error? ($?)"
-            ((glob_errors++))
+            echo "Error: $?"
+            return 1
         fi
     fi
 }
@@ -122,9 +139,10 @@ function f_single_file {
     
     type=$(f_gettype "$1")
     
-    if [ ! "$type" ]
+    if [ -z "$type" ]
     then
-        echo "$(basename "$0"): Error: \"$1\" does not look like a MP3 or FLAC file." >&2
+        printf '%s: Error: “%s” does not look like an MP3 or FLAC file.\n' \
+                "$(basename "$0")" "$1" >&2
         exit 6
     fi
     

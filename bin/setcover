@@ -102,7 +102,10 @@ then
     target=$(readlink -f -- "$target")
     while read -rd '' file
     do
-        f_single_file "$file" "$pic"
+        if ! f_single_file "$file" "$pic"
+        then
+            ((glob_errors++)) || true
+        fi
     done < <(
         find "$target" -maxdepth 1 \
             -type f -readable -iregex '.*[^/]\.\(mp3\|flac\)' -print0
