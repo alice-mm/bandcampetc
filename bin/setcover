@@ -16,16 +16,29 @@ readonly SCR_DIR=$(
 
 
 function f_help {
-    echo "$(basename "$0"): Syntax to tag FILE with PICTURE:"
-    echo "    $(basename "$0") FILE PICTURE"
-    echo "Give an empty string for PICTURE to remove covers."
-    echo "Note that any previous picture will be removed either way."
-    echo "If FILE is a directory, FILE/*.mp3 and FILE/*.MP3 will be targeted."
-    echo "If \"metaflac\" is installed, FLAC files will also be processed."
+    local prog
+    
+    prog=$(printf '%q' "$(basename "$0")")
+    : "${prog:=setcover}"
+    
+    cat << _HELP_
+
+  $(basename "$0"): Set cover art for MP3 and FLAC files.
+
+  Tag FILE with PICTURE (removing existing ones from FILE):
+    ${prog} FILE PICTURE
+
+  Run on every MP3 and FLAC file directly within DIRECTORY:
+    ${prog} DIRECTORY PICTURE
+
+  Remove pictures from FILE:
+    ${prog} FILE ''
+
+_HELP_
 }
 
 
-if [ $# -eq 1 ] && grep -qxE 'help|-help|--help|-h|h' <<< "$1"
+if [ $# -eq 1 ] && grep -qxE -- '-help|--help|-h' <<< "$1"
 then
     f_help
     exit 0
@@ -39,7 +52,7 @@ then
 fi
 
 
-glob_errors=0
+declare -i glob_errors=0
 
 
 METAFLAC=metaflac
@@ -68,7 +81,7 @@ then
     fi
 fi # /if pic not empty
 
-target="$1"
+target=$1
 
 if [ ! -e "$target" ]
 then
@@ -85,19 +98,28 @@ fi
 if [ -d "$target" ]
 then
     # TARGETING A DIRECTORY
-    target=$(sed 's:/\+$::' <<< "$target")
-    find "$target" -maxdepth 1 -type f -iregex '.*\.\(mp3\|flac\)' -print0 | while read -rd '' file
+    # Simplify path to get prettier logs.
+    target=$(readlink -f -- "$target")
+    while read -rd '' file
     do
-        test -f "$file" || continue
-        test -r "$file" || continue
-        
-        f_single_file "$file" "$pic"
-    done
+        if ! f_single_file "$file" "$pic"
+        then
+            ((glob_errors++)) || true
+        fi
+    done < <(
+        find "$target" -maxdepth 1 \
+            -type f -readable -iregex '.*[^/]\.\(mp3\|flac\)' -print0
+    )
 else
     # TARGETING A SINGLE FILE
     f_single_file "$target" "$pic"
 fi
 
-echo "End of $(basename "$0"). ${glob_errors} error(s)."
+printf '%s: End. %d error·s.\n' "$(basename "$0")" "$glob_errors"
 
-exit 0
+if [ "$glob_errors" -eq 0 ]
+then
+    exit 0
+else
+    exit 1
+fi
