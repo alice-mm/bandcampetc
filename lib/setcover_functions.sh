@@ -102,7 +102,7 @@ function f_tag_flac {
     
     printf '%s: Removing images from “%s”...\n' "$(basename "$0")" "$1"
     
-    block_nums=$(get_flac_cover_front_block_nums "$1")
+    block_nums=$(get_flac_cover_front_block_nums "$1") || return
     
     if [ "$block_nums" ]
     then
