@@ -61,7 +61,7 @@ $ sudo apt-get install eyed3 flac rsync unzip imagemagick gawk geany ffmpeg
 
 The main script, at least from my point of view. When you download music from Bandcamp, Amazon Music, etc., you generally end up with a random ZIP archive full of poorly named files. Furthermore, the music’s metadata is often dirty as well: some labels add random information (sometimes even catalogue numbers!) in the tracks’ titles and so on.
 
-This script can be run from anywhere (it has no importance) and has currently no need for arguments.
+This script can be run from anywhere (it has no importance) without argument.
 
 1. It will look for ZIPs in `~/Downloads/` and `~/Téléchargements/`.
 2. For each ZIP that contains MP3 or FLAC files, the files will be extracted.
@@ -69,6 +69,8 @@ This script can be run from anywhere (it has no importance) and has currently no
 4. The files will be tagged and named according to the cleaned version of the metadata.
 5. If the album is in FLAC format and if the `CONVERT_TO_MP3` constant has been set to a non empty value, an MP3 version of the record will be generated alongside the FLAC version.
 6. The original ZIP will be discarded.
+
+See `bandcamp -h` for help.
 
 
 ## `capitasong`
@@ -176,15 +178,25 @@ To get both a FLAC and an MP3 version of your records, check the part of `config
 
 [source, bash]
 --
-readonly CONVERT_TO_MP3=''
+CONVERT_TO_MP3=''
 --
 
 To turn the feature on, change this line to:
 
 [source, bash]
 --
-readonly CONVERT_TO_MP3=1
+CONVERT_TO_MP3=1
 --
+
+[TIP]
+====
+To activate conversion for one specific run, you can use the `-c` option:
+
+[source, bash]
+--
+$ bandcamp -c
+--
+====
 
 
 ## Editor

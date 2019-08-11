@@ -14,7 +14,7 @@ fi
 # Set to non empty value to convert FLAC files to MP3.
 # I used to keep everything in both formats, and then ran out of space.
 # Now I convert to MP3 on the fly when putting music on my phone or whatever.
-readonly CONVERT_TO_MP3=''
+CONVERT_TO_MP3=''
 
 # EDITOR is a text editor command with options, in an indexed array.
 #
@@ -54,4 +54,4 @@ readonly COVER_LQ_BASENAME='cover_lq.jpg'
 # Given to Lame when creating MP3 files from HQ files.
 readonly CONVERTED_MP3_RATE=128k
 # Set to non empty value to activate debug logs.
-readonly PRINT_DEBUG=''
+PRINT_DEBUG=''
