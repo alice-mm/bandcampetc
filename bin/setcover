@@ -16,16 +16,29 @@ readonly SCR_DIR=$(
 
 
 function f_help {
-    echo "$(basename "$0"): Syntax to tag FILE with PICTURE:"
-    echo "    $(basename "$0") FILE PICTURE"
-    echo "Give an empty string for PICTURE to remove covers."
-    echo "Note that any previous picture will be removed either way."
-    echo "If FILE is a directory, FILE/*.mp3 and FILE/*.MP3 will be targeted."
-    echo "If \"metaflac\" is installed, FLAC files will also be processed."
+    local prog
+    
+    prog=$(printf '%q' "$(basename "$0")")
+    : "${prog:=setcover}"
+    
+    cat << _HELP_
+
+  $(basename "$0"): Set cover art for MP3 and FLAC files.
+
+  Tag FILE with PICTURE (removing existing ones from FILE):
+    ${prog} FILE PICTURE
+
+  Run on every MP3 and FLAC file directly within DIRECTORY:
+    ${prog} DIRECTORY PICTURE
+
+  Remove pictures from FILE:
+    ${prog} FILE ''
+
+_HELP_
 }
 
 
-if [ $# -eq 1 ] && grep -qxE 'help|-help|--help|-h|h' <<< "$1"
+if [ $# -eq 1 ] && grep -qxE -- '-help|--help|-h' <<< "$1"
 then
     f_help
     exit 0
