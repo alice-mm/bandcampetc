@@ -143,7 +143,8 @@ function f_single_file {
             ;;
         
         *)
-            echo "$(basename "$0"): Error: Type \"$type\" not fully supported." >&2
+            printf '%s: Error: Type “%s” not fully supported.\n' \
+                    "$(basename "$0")" "$type" >&2
             ;;
     esac
 }
