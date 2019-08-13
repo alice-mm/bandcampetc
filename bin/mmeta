@@ -9,7 +9,7 @@ readonly PROG=eyeD3
 readonly OPTNS=(
     --no-color
 )
-readonly PLACEHOLDER='Unknown'
+PLACEHOLDER='Unknown'
 
 function usage {
     bold=$(tput T"${TERM:-xterm}" bold 2> /dev/null)
