@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-readonly DOCKER_IMAGE_TAG=bandcampetc-integration-tests
+readonly DOCKER_IMAGE_TAG=alice-mm/bandcampetc-it
 
 
 # Get the name of the directory the current script sits in.
