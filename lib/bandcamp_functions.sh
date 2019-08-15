@@ -182,12 +182,13 @@ function try_to_guess_genre {
     
     # Get a few random files for this artist
     # and try to see what their genre is.
-    # The most frequent answer (ignoring “$MMETA_PLACEHOLDER”) wins.
+    # Exclude empty answers, sort, count “votes”.
+    # The most frequent answer wins.
     find "$DIR_M"/"$("$RENAME" <<< "$1")"/ -type f \
             '(' -iname '*.mp3' -or -iname '*.flac' ')' 2> /dev/null \
             | shuf | head -5 \
-            | xargs --no-run-if-empty "$MMETA" '%g\n' 2> /dev/null \
-            | grep -vxF -- "$MMETA_PLACEHOLDER" | sort | uniq -c | sort -k1,1nr | head -1 \
+            | xargs --no-run-if-empty "$MMETA" -e '%g\n' 2> /dev/null \
+            | awk 'length > 1' | sort | uniq -c | sort -k1,1nr | head -1 \
             | sed $'s/^[\t ]*[0-9]\+[\t ]*//'
 }
 
