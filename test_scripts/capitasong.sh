@@ -54,7 +54,39 @@ _params=(
     $'a \t − \t a a'  'A – A A'
     
     'Tim Bowness - the Warm-up Man Forever'
-    'Tim Bowness – The Warm-up Man Forever'
+    'Tim Bowness – The Warm-Up Man Forever'
+    
+    'a tree tries out a dog' 'A Tree Tries Out a Dog'
+    'a tree tried out a dog' 'A Tree Tried Out a Dog'
+    
+    'He talked back to me'          'He Talked Back to Me'
+    'We were back and so were you'  'We Were back and So Were You'
+    
+    'This is a hold-up, yo' 'This Is a Hold-Up, Yo'
+    
+    'foo: the foo'  'Foo: The Foo'
+    'foo - 4-3 foo' 'Foo – 4-3 Foo'
+    
+    ..      ..
+    ...     …
+    ....    …
+    .....   …
+    ......  …
+    
+    'foo...'        'Foo…'
+    'foo   ...bar'  'Foo… Bar'
+    'foo... a bar'  'Foo… A Bar'
+    '...foo a bar'  '… Foo a Bar'
+    '...a bar'      '… A Bar'
+    
+    'foo (a bar) plop'  'Foo (A Bar) Plop'
+    'foo [a bar] plop'  'Foo [A Bar] Plop'
+    'foo / a bar'       'Foo / A Bar'
+    'foo/a bar'         'Foo / A Bar'
+    
+    'foo/bar'               'Foo / Bar'
+    'foo        /   bar'    'Foo / Bar'
+    'foo/bar/plop'          'Foo / Bar / Plop'
 )
 
 for ((i = 0;  i < ${#_params[@]} - 1;  i += 2))
