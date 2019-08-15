@@ -211,8 +211,8 @@ function print_metafile_line_for_track {
     # It might be <n>/<k>, I think, hence the sed removing stuff.
     n=$(get_clean_track_number_from_file "$1")
     
-    raw_title=$("$MMETA" '%t' "$1")
-    if [ "$raw_title" = "$MMETA_PLACEHOLDER" ]
+    raw_title=$("$MMETA" -e '%t' "$1")
+    if [ -z "$raw_title" ]
     then
         # Use filename as fallback to be able to differentiate tracks
         # if several have crappy metadata.

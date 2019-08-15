@@ -7,12 +7,12 @@ set -evx
 
 
 function mock_mmeta {
-    case "$1" in
-        '%T\n')
+    case "$# $*" in
+        '2 %T\n '*)
             echo 03/009
             ;;
         
-        '%t')
+        '3 -e %t '*)
             echo 'a a b a a'
             ;;
         
@@ -81,16 +81,14 @@ _EXPECTED_
 )"
 
 
-MMETA_PLACEHOLDER=jrijri
-
 function mock_mmeta {
-    case "$1" in
-        '%T\n')
+    case "$# $*" in
+        '2 %T\n '*)
             echo 03/009
             ;;
         
-        '%t')
-            echo jrijri
+        '3 -e %t '*)
+            # No title available, say nothing.
             ;;
         
         *)
