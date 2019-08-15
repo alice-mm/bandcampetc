@@ -99,8 +99,8 @@ do
         s/\bTalk(s|ed)?([ -])back\b/Talk\1\2Back/g
         s/\bTalk(s|ed)?([ -])over\b/Talk\1\2Over/g
         s/\bThrow(s?)([ -])away\b/Throw\1\2Away/g
-        s/\bTr(y|ies)([ -])on\b/Tr\1\2On/g
-        s/\bTr(y|ies)([ -])out\b/Tr\1\2Out/g
+        s/\bTr(y|ie[ds])([ -])on\b/Tr\1\2On/g
+        s/\bTr(y|ie[ds])([ -])out\b/Tr\1\2Out/g
         s/\bTurn(s|ed)?([ -])down\b/Turn\1\2Down/g
         s/\bTurn(s|ed)?([ -])in\b/Turn\1\2In/g
         s/\bTurn(s|ed)?([ -])off\b/Turn\1\2Off/g
