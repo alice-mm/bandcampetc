@@ -123,8 +123,8 @@ do
         s/([ \t]*[–—−-]+[ \t]+|[ \t]+[–—−-]+[ \t]*)([[:alnum:]])/ – \u\2/g
         
         # Similar thing after a bunch of other characters:
-        # “…”, “(”, “[”, “:”, “/”
-        s,([…:(/\[])([^[:alpha:]]*)([[:alpha:]]),\1\2\u\3,g
+        # “…”, “(”, “[”, “:”, “/”…
+        s,([…:;.(/\[])([^[:alpha:]]*)([[:alpha:]]),\1\2\u\3,g
         
         # I prefer “foo / bar” to “foo/bar”.
         # NB: I’d love to use U+202F around the “/” but some players display
