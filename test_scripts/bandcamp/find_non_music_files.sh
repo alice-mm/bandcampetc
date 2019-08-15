@@ -22,6 +22,9 @@ declare -A still_needs_to_be_found=(
     [b.jpeg]=1
     [c.png]=1
     [d.gif]=1
+    [e.MOV]=1
+    [f.avi]=1
+    [g.adoc]=1
 )
 
 unset -v to_create
@@ -38,6 +41,7 @@ to_create=(
     
     foo.txt BAR.PDF jrijri.md
     a.jpg b.jpeg c.png d.gif
+    e.MOV f.avi g.adoc
     
     osef.mp3 nope.flac OSEF.MP3 NOPE.FLAC
 )
