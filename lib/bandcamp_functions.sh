@@ -790,7 +790,7 @@ function init_metadata {
     t[artist]=$("$CAPITASONG" "$("$MMETA" '%a' "$1")")
     t[albumartist]=${t[artist]}
     t[album]=$("$CAPITASONG" "$("$MMETA" '%A' "$1")")
-    t[year]=$("$MMETA" '%y' "$1")
+    t[year]=$("$MMETA" -e '%y' "$1")
     t[genre]=$("$MMETA" '%g' "$1")
     
     if [ "${t[genre]}" = "$MMETA_PLACEHOLDER" ]
