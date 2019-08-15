@@ -60,6 +60,95 @@ function my_renamer {
 }
 
 
+# Wrapper for “clean_hierarchy” that does nothing (successfully) if
+# the configuration does not ask for cleaning.
+# $@    Argument for “clean_hierarchy”.
+function clean_hierarchy_if_needed {
+    if [ "$CLEAN_HIERARCHY" ]
+    then
+        clean_hierarchy "$@"
+        return
+    else
+        debug 'Not trying to clean.'
+        return 0
+    fi
+}
+
+
+# $1    Path to a directory.
+#
+# If the given directory X contains nothing but another directory Y,
+# take the contents of Y, place them directly under X, and remove Y.
+#
+# Exit status:
+#   0   if the hierarchy was simplified.
+#   1   if error.
+#   10  if the hierarchy is too complicated to be simplified.
+function clean_hierarchy {
+    : "${1:?No path given.}"
+    
+    local -i nb
+    local the_only_item
+    
+    if [ ! -d "$1" ]
+    then
+        err 'No “%s” directory.' "$1"
+        return 1
+    fi
+    
+    nb=$(find "$1" -mindepth 1 -maxdepth 1 -printf 1 | wc -c)
+    
+    # There should be one item.
+    if [ "$nb" -ne 1 ]
+    then
+        return 10
+    fi
+    
+    the_only_item=$(find "$1" -mindepth 1 -maxdepth 1 -type d)
+    
+    # The only item should be a directory.
+    if [ -z "$the_only_item" ]
+    then
+        return 10
+    fi
+    
+    # One of the files in the lower directory might bear the same name as the
+    # directory itself. And hidden files are painful to handle
+    # with a simple “mv + *”. I’ll just move the lower directory away
+    # and sync it with its parent. /shrug
+    local tdir=$(mktemp -d "${TMPDIR:-/tmp}"/bandcamp-cleaning-XXXXXXXX)
+    
+    if ! mv -- "$the_only_item" "$tdir"/
+    then
+        err 'Failed to clean hierarchy: mv %q %q' "$the_only_item" "$tdir"/
+        return 1
+    fi
+    
+    if rsync -au -- "$tdir"/"$(basename "$the_only_item")"/ "$1"/
+    then
+        if ! rm -fr -- "$tdir"/
+        then
+            warn 'Failed to remove temporary directory “%s”.' "$tdir"/
+        fi
+        
+        debug 'Moved files directly under “%s” to clean the hierarchy.' "$1"/
+        return 0
+    else
+        err 'Failed to clean hierarchy: rsync -au %q %q' \
+                "$tdir"/"$(basename "$the_only_item")"/ "$1"/
+        
+        if mv -n -- "$tdir"/"$(basename "$the_only_item")" "$1"/
+        then
+            log 'Reverted partial cleaning.'
+        else
+            err 'Failed to revert partial cleaning.'
+        fi
+        
+        return 1
+    fi
+}
+
+
 # $1    Path to ZIP archive.
 # Exits with 0 status iff it contains a “.mp3” or “.flac” file.
 function mp3_or_flac_in_zip {
@@ -1019,8 +1108,14 @@ function process_one_music_zip {
     
     log 'Moving the files to “%s”...' "$final_dir"
     
-    mkdir -p -- "$final_dir" &&
-    rsync -au -- storage/ "$final_dir"/ &&
-    log 'All done for this ZIP.' &&
-    rm -v -- "$archive"
+    if mkdir -p -- "$final_dir" &&
+        rsync -au -- storage/ "$final_dir"/
+    then
+        clean_hierarchy_if_needed "$final_dir"
+        
+        log 'All done for this ZIP.'
+        rm -v -- "$archive"
+    else
+        log 'Refrained from deleting the original ZIP because of errors.'
+    fi
 }
