@@ -24,7 +24,12 @@ function mock_mmeta {
     case "$1" in
         %a) printf 'a r t ist';;
         %A) printf 'alb (UM)';;
-        %y) printf 2016;;
+        '-e')
+            if [ "$2" = '%y' ]
+            then
+                printf 2016
+            fi
+            ;;
         %g) printf '%s' "$_mock_mmeta_genre";;
         *) return 1;;
     esac

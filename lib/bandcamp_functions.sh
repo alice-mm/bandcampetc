@@ -182,12 +182,13 @@ function try_to_guess_genre {
     
     # Get a few random files for this artist
     # and try to see what their genre is.
-    # The most frequent answer (ignoring “$MMETA_PLACEHOLDER”) wins.
+    # Exclude empty answers, sort, count “votes”.
+    # The most frequent answer wins.
     find "$DIR_M"/"$("$RENAME" <<< "$1")"/ -type f \
             '(' -iname '*.mp3' -or -iname '*.flac' ')' 2> /dev/null \
             | shuf | head -5 \
-            | xargs --no-run-if-empty "$MMETA" '%g\n' 2> /dev/null \
-            | grep -vxF -- "$MMETA_PLACEHOLDER" | sort | uniq -c | sort -k1,1nr | head -1 \
+            | xargs --no-run-if-empty "$MMETA" -e '%g\n' 2> /dev/null \
+            | awk 'length > 1' | sort | uniq -c | sort -k1,1nr | head -1 \
             | sed $'s/^[\t ]*[0-9]\+[\t ]*//'
 }
 
@@ -210,8 +211,8 @@ function print_metafile_line_for_track {
     # It might be <n>/<k>, I think, hence the sed removing stuff.
     n=$(get_clean_track_number_from_file "$1")
     
-    raw_title=$("$MMETA" '%t' "$1")
-    if [ "$raw_title" = "$MMETA_PLACEHOLDER" ]
+    raw_title=$("$MMETA" -e '%t' "$1")
+    if [ -z "$raw_title" ]
     then
         # Use filename as fallback to be able to differentiate tracks
         # if several have crappy metadata.
@@ -789,7 +790,7 @@ function init_metadata {
     t[artist]=$("$CAPITASONG" "$("$MMETA" '%a' "$1")")
     t[albumartist]=${t[artist]}
     t[album]=$("$CAPITASONG" "$("$MMETA" '%A' "$1")")
-    t[year]=$("$MMETA" '%y' "$1")
+    t[year]=$("$MMETA" -e '%y' "$1")
     t[genre]=$("$MMETA" '%g' "$1")
     
     if [ "${t[genre]}" = "$MMETA_PLACEHOLDER" ]
