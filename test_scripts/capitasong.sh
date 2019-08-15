@@ -87,6 +87,11 @@ _params=(
     'foo/bar'               'Foo / Bar'
     'foo        /   bar'    'Foo / Bar'
     'foo/bar/plop'          'Foo / Bar / Plop'
+    
+    '1. a tree'     '1. A Tree'
+    'XIV. a tree'   'XIV. A Tree'
+    
+    'your mom; a dad' 'Your Mom; A Dad'
 )
 
 for ((i = 0;  i < ${#_params[@]} - 1;  i += 2))
