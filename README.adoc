@@ -63,7 +63,7 @@ The main script, at least from my point of view. When you download music from Ba
 
 This script can be run from anywhere (it has no importance) without argument.
 
-1. It will look for ZIPs in `~/Downloads/` and `~/Téléchargements/`. You can also give ZIPs directly as arguments to the script.
+1. It will look for ZIPs in `~/Downloads/`, `~/Téléchargements/`, `~/Descargas/`, `~/Загрузки/`… You can also give ZIPs directly as arguments to the script.
 2. For each ZIP that contains MP3 or FLAC files, the files will be extracted.
 3. You will be offered the possibility to edit the music’s metadata in a text editor.
 4. The files will be tagged and named according to the cleaned version of the metadata.
