@@ -37,3 +37,5 @@ Alice Three Fake Album 3/4 Experimental 2019
 Alice Four Fake Album 4/4 Experimental 2019
 _EXPECTATIONS_
 )"
+
+test -z "$(find ~/Downloads/ -type f)"

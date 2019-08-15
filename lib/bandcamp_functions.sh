@@ -118,21 +118,26 @@ function clean_hierarchy {
     # and sync it with its parent. /shrug
     local tdir=$(mktemp -d "${TMPDIR:-/tmp}"/bandcamp-cleaning-XXXXXXXX)
     
-    if ! mv "$the_only_item" "$tdir"/
+    if ! mv -- "$the_only_item" "$tdir"/
     then
         err 'Failed to clean hierarchy: mv %q %q' "$the_only_item" "$tdir"/
         return 1
     fi
     
-    if rsync -au "$tdir"/"$(basename "$the_only_item")"/ "$1"/
+    if rsync -au -- "$tdir"/"$(basename "$the_only_item")"/ "$1"/
     then
-        log 'Moved files directly under “%s” to clean the hierarchy.' "$1"
+        if ! rm -fr -- "$tdir"/
+        then
+            warn 'Failed to remove temporary directory “%s”.' "$tdir"/
+        fi
+        
+        debug 'Moved files directly under “%s” to clean the hierarchy.' "$1"/
         return 0
     else
         err 'Failed to clean hierarchy: rsync -au %q %q' \
                 "$tdir"/"$(basename "$the_only_item")"/ "$1"/
         
-        if mv -n "$tdir"/"$(basename "$the_only_item")" "$1"/
+        if mv -n -- "$tdir"/"$(basename "$the_only_item")" "$1"/
         then
             log 'Reverted partial cleaning.'
         else
@@ -1104,9 +1109,10 @@ function process_one_music_zip {
     log 'Moving the files to “%s”...' "$final_dir"
     
     if mkdir -p -- "$final_dir" &&
-        rsync -au -- storage/ "$final_dir"/ &&
-        clean_hierarchy_if_needed "$final_dir"
+        rsync -au -- storage/ "$final_dir"/
     then
+        clean_hierarchy_if_needed "$final_dir"
+        
         log 'All done for this ZIP.'
         rm -v -- "$archive"
     else

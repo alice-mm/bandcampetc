@@ -53,3 +53,5 @@ do
         sha1sum ~/Music/alice/fake_album/cover_lq.jpg | cut -d ' ' -f 1
     )"
 done
+
+test -z "$(find ~/Downloads/ -type f)"
