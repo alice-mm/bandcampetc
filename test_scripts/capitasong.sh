@@ -56,8 +56,8 @@ _params=(
     'Tim Bowness - the Warm-up Man Forever'
     'Tim Bowness – The Warm-Up Man Forever'
     
-    'a tree tries out a dog'
-    'A Tree Tries Out a Dog'
+    'a tree tries out a dog' 'A Tree Tries Out a Dog'
+    'a tree tried out a dog' 'A Tree Tried Out a Dog'
     
     'He talked back to me'          'He Talked Back to Me'
     'We were back and so were you'  'We Were back and So Were You'
