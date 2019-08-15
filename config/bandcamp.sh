@@ -56,6 +56,9 @@ readonly EDITOR=(geany -i)
 readonly CONV=ffmpeg
 #readonly CONV=avconv
 
+# If not empty, when there is only one type of files (FLAC or MP3
+# and no “other” category), the files will be moved up by one level.
+readonly CLEAN_HIERARCHY=1
 # What the MMETA script gives when asked for an unavailable information.
 readonly MMETA_PLACEHOLDER='Unknown'
 # Basename for low quality cover arts.

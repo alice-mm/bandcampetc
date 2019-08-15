@@ -35,9 +35,9 @@ CONVERTED_MP3_RATE=154k
 
 # Should exit the subshell because of missing args.
 # The “true” should therefore not be executed.
-! ( convert_to_mp3;         true )
-! ( convert_to_mp3 foo;     true )
-! ( convert_to_mp3 '' bar;  true )
+( convert_to_mp3;           true ) && exit 1
+( convert_to_mp3 foo;       true ) && exit 1
+( convert_to_mp3 '' bar;    true ) && exit 1
 
 unset -v _called _ok
 convert_to_mp3 src.flac dest.mp3
