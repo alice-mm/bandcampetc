@@ -62,6 +62,9 @@ function get_and_store_other_files {
 function clean_all_file_names {
     _mock clean_all_file_names "$@"
 }
+function clean_hierarchy_if_needed {
+    _mock clean_hierarchy_if_needed "$@"
+}
 function rm {
     _mock rm "$@"
 }
@@ -90,7 +93,7 @@ touch foo/bar.mp3
 process_one_music_zip /some/path/to/foo.zip
 
 diff "$callfile" <(
-    cat << '_EXPECTATIONS_'
+    cat << _EXPECTATIONS_
 unzip(foo.zip)
 init_metadata(./foo/bar.mp3,_meta)
 display_record_info(mp3,_meta)
@@ -102,6 +105,7 @@ mock_covers(storage/)
 apply_cover_if_we_got_one(mp3)
 get_and_store_other_files()
 clean_all_file_names(_meta)
+clean_hierarchy_if_needed(${tdir}/poire/tourte/_/_)
 rm(-v,--,/some/path/to/foo.zip)
 _EXPECTATIONS_
 )
@@ -129,7 +133,7 @@ function look_for_existing_cover { echo nsunsu.jpg; }
 process_one_music_zip /some/path/to/foo.zip
 
 diff "$callfile" <(
-    cat << '_EXPECTATIONS_'
+    cat << _EXPECTATIONS_
 unzip(foo.zip)
 init_metadata(./foo/bar.mp3,_meta)
 display_record_info(mp3,_meta)
@@ -141,6 +145,7 @@ process_and_move_existing_cover(nsunsu.jpg)
 apply_cover_if_we_got_one(mp3)
 get_and_store_other_files()
 clean_all_file_names(_meta)
+clean_hierarchy_if_needed(${tdir}/poire/tourte/_/_)
 rm(-v,--,/some/path/to/foo.zip)
 _EXPECTATIONS_
 )
