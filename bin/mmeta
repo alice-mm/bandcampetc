@@ -1,6 +1,8 @@
 #! /usr/bin/env bash
 
-# Last modification: 2018y12m04d (added options for help and empty placeholder).
+# Last modifications:
+# 2021y05m20d: Added diacritics uncombinations.
+# 2018y12m04d: Added options for help and empty placeholder.
 
 # Display information found in MP3 tags, using eyeD3 or whatever is set using
 # the variable below.
@@ -9,6 +11,95 @@ readonly PROG=eyeD3
 readonly OPTNS=(
     --no-color
 )
+
+# At some point, some Bandcamp files have started using stuff like
+# https://unicode-table.com/en/blocks/combining-diacritical-marks/
+# in their metadata. These are poorly displayed or supported
+# by some pieces of software, and make my capitalization scripts
+# go haywire, so here I try to replace some of the most common
+# combinations by the corresponding single character.
+readonly UNCOMBINE_DIACRITICS="
+    s/A$(printf '\u0300')/À/g
+    s/A$(printf '\u0301')/Á/g
+    s/A$(printf '\u0302')/Â/g
+    s/A$(printf '\u0303')/Ã/g
+    s/A$(printf '\u0308')/Ä/g
+    s/A$(printf '\u030A')/Å/g
+    
+    s/E$(printf '\u0300')/È/g
+    s/E$(printf '\u0301')/É/g
+    s/E$(printf '\u0302')/Ê/g
+    s/E$(printf '\u0303')/Ẽ/g
+    s/E$(printf '\u0308')/Ë/g
+    
+    s/I$(printf '\u0300')/Ì/g
+    s/I$(printf '\u0301')/Í/g
+    s/I$(printf '\u0302')/Î/g
+    s/I$(printf '\u0303')/Ĩ/g
+    s/I$(printf '\u0308')/Ï/g
+    
+    s/N$(printf '\u0303')/Ñ/g
+    
+    s/O$(printf '\u0300')/Ò/g
+    s/O$(printf '\u0301')/Ó/g
+    s/O$(printf '\u0302')/Ô/g
+    s/O$(printf '\u0303')/Õ/g
+    s/O$(printf '\u0308')/Ö/g
+    
+    s/U$(printf '\u0300')/Ù/g
+    s/U$(printf '\u0301')/Ú/g
+    s/U$(printf '\u0302')/Û/g
+    s/U$(printf '\u0303')/Ũ/g
+    s/U$(printf '\u0308')/Ü/g
+    s/U$(printf '\u030A')/Ů/g
+    
+    s/Y$(printf '\u0300')/Ỳ/g
+    s/Y$(printf '\u0301')/Ý/g
+    s/Y$(printf '\u0302')/Ŷ/g
+    s/Y$(printf '\u0303')/Ỹ/g
+    s/Y$(printf '\u0308')/Ÿ/g
+    
+    s/a$(printf '\u0300')/à/g
+    s/a$(printf '\u0301')/á/g
+    s/a$(printf '\u0302')/â/g
+    s/a$(printf '\u0303')/ã/g
+    s/a$(printf '\u0308')/ä/g
+    s/a$(printf '\u030A')/å/g
+    
+    s/e$(printf '\u0300')/è/g
+    s/e$(printf '\u0301')/é/g
+    s/e$(printf '\u0302')/ê/g
+    s/e$(printf '\u0303')/ẽ/g
+    s/e$(printf '\u0308')/ë/g
+    
+    s/i$(printf '\u0300')/ì/g
+    s/i$(printf '\u0301')/í/g
+    s/i$(printf '\u0302')/î/g
+    s/i$(printf '\u0303')/ĩ/g
+    s/i$(printf '\u0308')/ï/g
+    
+    s/n$(printf '\u0303')/ñ/g
+    
+    s/o$(printf '\u0300')/ò/g
+    s/o$(printf '\u0301')/ó/g
+    s/o$(printf '\u0302')/ô/g
+    s/o$(printf '\u0303')/õ/g
+    s/o$(printf '\u0308')/ö/g
+    
+    s/u$(printf '\u0300')/ù/g
+    s/u$(printf '\u0301')/ú/g
+    s/u$(printf '\u0302')/û/g
+    s/u$(printf '\u0303')/ũ/g
+    s/u$(printf '\u0308')/ü/g
+    s/u$(printf '\u030A')/ů/g
+    
+    s/y$(printf '\u0300')/ỳ/g
+    s/y$(printf '\u0301')/ý/g
+    s/y$(printf '\u0302')/ŷ/g
+    s/y$(printf '\u0303')/ỹ/g
+    s/y$(printf '\u0308')/ÿ/g
+"
+
 PLACEHOLDER='Unknown'
 
 function usage {
@@ -191,6 +282,8 @@ do
         s/%f/$f/g"'
         s/\\t/'$'\t''/g
         s/\\n/\'$'\n''/g
+        
+        '"${UNCOMBINE_DIACRITICS}"'
     ' <<< "$1" | head -c -1
 done
 
