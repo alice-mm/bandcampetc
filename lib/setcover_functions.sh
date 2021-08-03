@@ -26,7 +26,8 @@ function f_gettype {
             ;;
         
         flac)
-            if [ "$mime" = audio/x-flac ]
+            if [ "$mime" = audio/x-flac ] ||
+                [ "$mime" = audio/flac ]
             then
                 echo flac
             fi
