@@ -46,7 +46,17 @@ function f_gettype {
 function f_tag {
     printf '%s: Removing images from “%s”...\n' "$(basename "$0")" "$1"
     
-    if eyeD3 --no-color --remove-images "$1" 2>&1 > /dev/null | sed 's/^/eyeD3: /'
+    # At some point, eyeD3 changed that option’s name
+    # and entirely dropped the support for the former name.
+    local rm_opt
+    if eyeD3 --help 2> /dev/null | grep -q -- '--remove-all-images'
+    then
+        rm_opt='--remove-all-images'
+    else
+        rm_opt='--remove-images'
+    fi
+    
+    if eyeD3 --no-color "$rm_opt" "$1" 2>&1 > /dev/null | sed 's/^/eyeD3: /'
     then
         echo "OK"
     else
