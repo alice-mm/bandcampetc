@@ -253,7 +253,7 @@ do
     else
         # Should be an MP3 file.
         data=$(
-            "$PROG" "${OPTNS[@]}" "$f" 2> /dev/null | tr '\t' '\n'
+            "$PROG" "${OPTNS[@]}" "$f" 2> /dev/null | tr '\t\0' '\n'
         )
     fi
     
