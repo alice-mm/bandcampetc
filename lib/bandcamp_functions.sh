@@ -655,7 +655,7 @@ function process_one_source_file {
     # Lowercase.
     type=${type,,}
     
-    track_number=$("$MMETA" '%T' "$src" | cut -d '/' -f 1)
+    track_number=$("$MMETA" '%T' "$src" | cut -d '/' -f 1 | sed 's/^0*//')
     # Fallback: Try to get the track number from the filename.
     : "${track_number:=$(
         # Get the first group of numbers.
