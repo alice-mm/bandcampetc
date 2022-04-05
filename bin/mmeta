@@ -1,6 +1,7 @@
 #! /usr/bin/env bash
 
 # Last modifications:
+# 2022y04m05d: Allow *recording* date in addition to release.
 # 2021y05m20d: Added diacritics uncombinations.
 # 2018y12m04d: Added options for help and empty placeholder.
 
@@ -266,7 +267,7 @@ do
     T=$(sed -n  's/^[Tt]rack\(number\)\?: //p           ; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)
     l=$(sed -n  's/^[Tt]ime: //p                        ; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)
     g=$(sed -n  's/^[Gg]enre: \([^(]*\)\( (.*)\)\?/\1/p ; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)
-    y=$(sed -nr 's/^([Yy]ear|([Rr]elease )?[Dd]ate): //p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)
+    y=$(sed -nr 's/^([Yy]ear|([Rr]elease |[Rr]ecording )?[Dd]ate): //p; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)
     s=$(sed -n  's/^\[ \([^]]*\) \]$/\1/p               ; t l; d; :l; q' <<< "$data" | escape_stuff | replace_if_empty)
     f=$(escape_stuff <<< "$f")
     
