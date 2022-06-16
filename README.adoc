@@ -1,13 +1,13 @@
-# Bandcamp, etc. (`bandcampetc`)
+= Bandcamp, etc. (`bandcampetc`)
 :toc:
 :toclevels: 0
 
 Scripts to keep music tidy. The main one extracts and cleans files from https://bandcamp.com/[Bandcamp] and Amazon Music downloads. It should work with pretty much any ZIP archive that contains MP3 or FLAC files, actually. <<sample-exec,See example below.>>
 
 
-# Getting started
+== Getting started
 
-## Execution
+=== Execution
 
 1. Download the project and save it where it suits you.
 
@@ -23,7 +23,7 @@ export PATH
 WARNING: Make sure you adapt the `~/bin/bandcampetc/bin/` path of the example according to where you saved this project.
 
 
-## Dependencies
+=== Dependencies
 
 The `bandcamp` script relies on:
 
@@ -47,17 +47,20 @@ ImageMagick::   To manipulate cover art. (`imagemagick` package.)
 
 `ffmpeg` or `avconv`::  For FLAC → MP3 conversions. *(Optional, see <<convert-config,the config section>>.)*
 
+`file`::        Installed on most distributions, but missing from some Docker images.
+                The package is also called `file`.
+
 On Ubuntu and Debian machines, this should be enough to get everything:
 
 [source, bash]
 --
-$ sudo apt-get install eyed3 flac rsync unzip imagemagick gawk geany ffmpeg
+$ sudo apt-get install eyed3 flac rsync unzip imagemagick gawk geany ffmpeg file
 --
 
 
-# Contents
+== Contents
 
-## `bandcamp`
+=== `bandcamp`
 
 The main script, at least from my point of view. When you download music from Bandcamp, Amazon Music, etc., you generally end up with a random ZIP archive full of poorly named files. Furthermore, the music’s metadata is often dirty as well: some labels add random information (sometimes even catalogue numbers!) in the tracks’ titles and so on.
 
@@ -73,7 +76,7 @@ This script can be run from anywhere (it has no importance) without argument.
 See `bandcamp -h` for help.
 
 
-## `capitasong`
+=== `capitasong`
 
 Try to put capital letters in nice places in song and record titles. This is not perfect, of course, but this script provides a good starting point for metadata cleaning.
 
@@ -89,22 +92,22 @@ Le Chien de Ta Mère Est Gros
 NOTE: Many conventions exist. I used stuff from http://aitech.ac.jp/~ckelly/midi/help/caps.html. (That weird link might become dead or point to something unrelated someday. Use with caution.)
 
 
-## `covers`
+=== `covers`
 
 Try to fetch cover arts from various sources. An old ugly script of mine. Don’t pay it too much attention. Most album downloads already contain a cover anyway, so this is seldom called.
 
 
-## `setcover`
+=== `setcover`
 
 I like to add the cover art in the music files’ metadata. This way, even devices such as cars with no Internet access or whatever are able to display cover arts when playing music. The `setcover` script embed a cover art in MP3 and FLAC files. See `setcover -h` for help.
 
 
-## `create-lq-cover`
+=== `create-lq-cover`
 
 To prevent art addition (see `setcover`) from making my files oversized, I use a low-quality version of it. The `create-lq-cover` script simply creates lightweight pictures from a given original version.
 
 
-## `mmeta`
+=== `mmeta`
 
 Used to be able to display metadata from MP3 and FLAC files using the same command. This uses homemade pattern strings.
 
@@ -124,7 +127,7 @@ Cult of Luna, “Following Betulas” [Unknown, Unknown]
 See `mmeta -h` for help.
 
 
-## `to_acceptable_name`
+=== `to_acceptable_name`
 
 I _love_ this one. It eats a string and gives a version of it devoid of weird characters. I use it to rename all my music files. Since I buy obscure black metal and stuff, I had to update it to roughly transliterate Cyrillic and Icelandic. It still can’t handle Japanese properly, though. Sorry.
 
@@ -140,7 +143,7 @@ atoez_s_1_4.flac
 TIP: This script also cuts https://elaltardelholocausto.bandcamp.com/album/i-t[long file names] to 255{nbsp}characters to avoid errors, while trying to keep the file’s extension.
 
 
-## `give_acceptable_name`
+=== `give_acceptable_name`
 
 Use `to_acceptable_name` to find a suitable name for a file, and rename that file using that name.
 
@@ -158,12 +161,12 @@ Remember to check that the “Appearance Conditions” are broad enough.
 ====
 
 
-# Configuration of the `bandcamp` script
+== Configuration of the `bandcamp` script
 
 Various settings can be changed in the `config/bandcamp.sh` file.
 
 [#convert-config]
-## Converting FLAC files to MP3s
+=== Converting FLAC files to MP3s
 
 To get both a FLAC and an MP3 version of your records, check the part of `config/bandcamp.sh` that looks like this:
 
@@ -191,7 +194,7 @@ $ bandcamp -c
 
 
 [#config-editor]
-## Editor
+=== Editor
 
 To choose the text editor used to edit music metadata, check the part of `config/bandcamp.sh` that looks like this:
 
@@ -213,9 +216,9 @@ NOTE: I use an indexed array rather than a dumb string to make the script more r
 TIP: To make the script run without any interaction, use a no-op or any idle-ish command as an editor: `readonly EDITOR=(:)`
 
 
-# Tests
+== Tests
 
-## Unit tests
+=== Unit tests
 
 I love trying to do unit testing in Bash. Just run `./run_tests.sh` and a bunch of commands will be executed. The first failure stops the execution (`set -e`) and you should be able to see what failed in the output.
 
@@ -235,17 +238,18 @@ $ ./run_tests.sh test_scripts/mmeta.sh test_scripts/setcover/gettype.sh
 ====
 
 
-## Integration tests
+=== Integration tests
 
-The `run_integration_tests.sh` script runs the unit tests as well as the `bandcamp` script in a Debian 9 Docker container. Nothing fancy for now as I’m no Docker expert, but it allowed me to improve stuff already.
+The `run_integration_tests.sh` script runs the unit tests as well as the `bandcamp` script in a Debian Docker container. Nothing fancy for now as I’m no Docker expert, but it allowed me to improve stuff already.
 
 
 [#sample-exec]
-# Sample execution of `bandcamp`
+== Sample execution of `bandcamp`
 
 With one ZIP from https://giftsfromenola.bandcamp.com/album/from-fathoms in `~/Downloads/`:
 
-```
+[source]
+----
     $ bandcamp 
 bandcamp: Inspecting “/home/alice/Downloads/Gifts From Enola - From Fathoms.zip”...
 Archive:  ./Gifts From Enola - From Fathoms.zip
@@ -314,10 +318,14 @@ bandcamp: End.
         └── cover_lq.jpg
 
 2 directories, 10 files
-```
+----
 
 
 [#contact-section]
-# Contact
+== Contact
+
+If you want to show your appreciation or make suggestions…
 
 image::http://www.alicem.net/contact.jpg[Contact email]
+
+(You can also send me https://bandcamp.com/alice_m/wishlist[Bandcamp gifts], I guess, hehe.)
