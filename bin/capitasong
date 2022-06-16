@@ -4,6 +4,32 @@
 # and capitalize them correctly in most cases.
 
 # Rules taken from http://aitech.ac.jp/~ckelly/midi/help/caps.html
+# Old weird link, not guaranteed to work forever,
+# but the Internet Archive does not seem to like
+# URLs that contain tildes; follow at your own risk.
+# Here’s an excerpt:
+#
+# [quote start]
+# > 1. The first and last words are always capitalized, and all except the words listed below are capitalized.
+# > 2. These are lower-case, unless they are the first word or last word.
+# >
+# >     articles: a, an, the
+# >     conjunctions: and, but, or, nor
+# >     prepositions that are less than five letters long: at, by, for, from, in, into, of, off, on, onto, out, over, to, up, with
+# >     as (only if it is followed by a noun)
+# >
+# > 3. Prepositions are sometimes capitalized.
+# >
+# >     Prepositions are capitalized when they are the first or last word.
+# >     Prepositions that are part of two-word "phrasal verbs" (Come On, Hold On, etc....) are capitalized.
+# >     Prepositions that are over four letters long. (across, after, among, beyond, ...)
+# >
+# > 4. These short words are capitalized.
+# > Some people occasionally forget to capitalize these.
+# >
+# >     also, be, if, than, that, thus, when
+# >     as (if it is followed by a verb)
+# [quote end]
 
 # I added French prepositions.
 
