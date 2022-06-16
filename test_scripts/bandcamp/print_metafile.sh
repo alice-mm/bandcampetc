@@ -51,6 +51,16 @@ test "$(print_metafile_content osef meta)" = "$(
 
 SKIP        = n
 
+# Most albums will have ARTIST=ALBUMARTIST, but for collaborations
+# and featurings, typically, you’d put only the “main” artist (or
+# “Various artists”, for example in video game soundtracks)
+# in “ALBUMARTIST” while writing every name in “ARTIST”.
+# Note that the ARTIST can be overridden for specific tracks
+# (see below), while ALBUMARTIST will be applied as-is to all tracks,
+# in order to keep the sorting straight within music players, and
+# this will be the value used to name the artist directory
+# when saving the final files.
+# Example: ALBUMARTIST=Converge // ARTIST=Converge & Chelsea Wolfe
 ARTIST      = lsi lsi lsi
 ALBUMARTIST = lsi uyuyu lsi
 ALBUM       = lsi dldldl lsi
