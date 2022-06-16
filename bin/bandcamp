@@ -109,6 +109,7 @@ DEPS=(
     identify
     convert
     awk
+    file
 )
 
 # Optional dependency.
