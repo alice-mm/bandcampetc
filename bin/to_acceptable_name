@@ -309,6 +309,9 @@ sed 's,:, -,g' <<< "${data:-_}" \
         # Prevent files from becoming hidden files.
         s/^\./_./
         
+        # Some filesystems, like NTFS, forbid trailing dots.
+        s/\.+$//
+        
         # Avoid empty names.
         s/^$/_/
         
