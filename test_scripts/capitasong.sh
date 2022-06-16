@@ -92,6 +92,10 @@ _params=(
     'XIV. a tree'   'XIV. A Tree'
     
     'your mom; a dad' 'Your Mom; A Dad'
+    
+    'WOLVES IN THE THRONE ROOM' 'Wolves in the Throne Room'
+    WOLOLOLOLO Wololololo
+    SHORT SHORT
 )
 
 for ((i = 0;  i < ${#_params[@]} - 1;  i += 2))

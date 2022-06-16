@@ -12,6 +12,7 @@
 # otherwise “\b” was matching random stuff, like the interstice
 # between “è” and “s”.
 
+readonly MAX_ACRONYM_LENGTH=6
 
 # Stuff that needs to be lowercase, except in phrasal verbs.
 LIST_LOWER='(A|An|The|And|But|Or|Nor|At|By|For|From|In|Into|Of|Off|On|Onto|Out|Over|To|Up|Upon|Down|With|As|Along|Back|Away|Un|Une|Le|La|Les|Et|Mais|Ou|Ni|À|Aux|Par|Pour|De|Des|Du|Dans|Hors|Sur|Sous|Avec|Vers|En|Dès|Sans)'
@@ -20,6 +21,12 @@ LIST_LOWER='(A|An|The|And|But|Or|Nor|At|By|For|From|In|Into|Of|Off|On|Onto|Out|O
 for title in "$@"
 do
     sed -r '
+        # Assume every yelling word that is too long has low chances
+        # of being an acronym and is probably just there because people
+        # write metadata sloppily and put everything in caps.
+        # Idem if multiple consecutive short yelling words.
+        s/\b[[:upper:] '"'"'-]{'"${MAX_ACRONYM_LENGTH:?}"',}\b/\L&/g
+
         # Every word:
         s/\b([[:alnum:]])/\u\1/g
         
