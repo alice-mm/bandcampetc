@@ -41,7 +41,7 @@
 readonly MAX_ACRONYM_LENGTH=6
 
 # Stuff that needs to be lowercase, except in phrasal verbs.
-LIST_LOWER='(A|An|The|And|But|Or|Nor|At|By|For|From|In|Into|Of|Off|On|Onto|Out|Over|To|Up|Upon|Down|With|As|Along|Back|Away|Un|Une|Le|La|Les|Et|Mais|Ou|Ni|À|Aux|Par|Pour|De|Des|Du|Dans|Hors|Sur|Sous|Avec|Vers|En|Dès|Sans|Der|Des|Dem|Den|Ein|Eines|Einem|Einen|Die|Der|Der|Die|Eine|Einer|Einer|Eine|Das|Des|Dem|Das|Ein|Eines|Einem|Ein|Die|Der|Den|Die|Kein|Keine)'
+LIST_LOWER='(A|An|The|And|But|Or|Nor|At|By|For|From|In|Into|Of|Off|On|Onto|Out|Over|To|Up|Upon|Down|With|As|Along|Back|Away|Un|Une|Le|La|Les|Et|Mais|Ou|Ni|À|Aux|Par|Pour|De|Des|Du|Dans|Hors|Sur|Sous|Avec|Vers|En|Dès|Sans|Der|Dem|Den|Ein|Eines|Einem|Einen|Eine|Einer|Das|Ein|Kein|Keine)'
 
 
 for title in "$@"
