@@ -145,7 +145,8 @@ do
         
         # Contractions such as "I ve" with apostrophes.
         # Also replaces non-ascii apostrophes with
-        # a simple single quote.
+        # a simple single quote. Don’t get me wrong, I love Unicode
+        # apostrophes, but I don’t trust music players that much.
         s/([[:alpha:]])'"['´’]"'([[:upper:]])/\1'"'"'\l\2/g
         
         s/[ \t]*\.{3,}[ \t]*/…/g
@@ -163,6 +164,15 @@ do
         # NB: I’d love to use U+202F around the “/” but some players display
         # it as a rectangle due to crappy fonts.
         s,[ \t]*/[ \t]*, / ,g
+        s,/[ \t]*/,//,g
+        
+        # Spacing between “)” and “(”.
+        s,\)[ \t]*\(,) (,g
+        
+        # Roman numerals.
+        # https://stackoverflow.com/a/10441405
+        s/\bM{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})\b/\U&/ig
+        s/\bMIX\b/Mix/g
         
         # First word:
         s/^([^[:alnum:]]*)([[:alnum:]])/\1\u\2/
