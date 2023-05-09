@@ -118,6 +118,29 @@ _params=(
     'infidèle(s)'       'Infidèle(s)'
     'A (de)bunk A'      'A (De)bunk A'
     '(de)bunk'          '(De)bunk'
+    
+    '1st'       '1st'
+    '321st'     '321st'
+    '432nd'     '432nd'
+    '2nd'       '2nd'
+    '3rd'       '3rd'
+    '543rd'     '543rd'
+    '4th'       '4th'
+    '654th'     '654th'
+    '9999th'    '9999th'
+    
+    # French ordinals:
+    '1ier'      '1er'
+    '1iers'     '1ers'
+    '1ière'     '1re'
+    '1ières'    '1res'
+    '34è'       '34e'
+    '34èmes'    '34es'
+    # Exception because too English-like; better leave that one alone.
+    '2nd'       '2nd'
+    '2nde'      '2de'
+    '2nds'      '2ds'
+    '2ndes'     '2des'
 )
 
 for ((i = 0;  i < ${#_params[@]} - 1;  i += 2))

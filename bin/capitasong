@@ -44,7 +44,7 @@ readonly MAX_ACRONYM_LENGTH=6
 LIST_LOWER='(A|An|The|And|But|Or|Nor|At|By|For|From|In|Into|Of|Off|On|Onto|Out|Over|To|Up|Upon|Down|With|As|Along|Back|Away|Un|Une|Le|La|Les|Et|Mais|Ou|Ni|À|Aux|Par|Pour|De|Des|Du|Dans|Hors|Sur|Sous|Avec|Vers|En|Dès|Sans|Der|Dem|Den|Ein|Eines|Einem|Einen|Eine|Einer|Das|Ein|Kein|Keine)'
 
 
-for title in "$@"
+for title
 do
     sed -r '
         # Assume every yelling word that is too long has low chances
@@ -184,6 +184,21 @@ do
         s/\bMIX\b/Mix/g
         # Conflict with French contractions.
         s/\b[DLM]'"'"'/\L&/g
+        
+        # Ordinals:
+        # • Turn “wrong” French ones into “correct” ones.
+        #       “premier(s)”
+        s/1ier(s?)\b/1er\1/ig
+        #       “première(s)”
+        s/1i[éèe]re(s?)\b/1re\1/ig
+        #       “—ième(s)”
+        s/([0-9])i?[éèe](me)?(s?)\b/\1e\3/ig
+        #       “second(e)(s)”
+        #       … But let “2nd” alone because it may appear in English.
+        s/2nde(s?)\b/2de\1/ig
+        s/2nd(e?)s\b/2d\1s/ig
+        # • Remove unwanted capital letters in French and English ones.
+        s/[0-9](st|nd|rd|th|(er|re|e|de?)s?)\b/\L&/ig
         
         # First word:
         s/^([^[:alnum:]]*)([[:alnum:]()])/\1\u\2/
