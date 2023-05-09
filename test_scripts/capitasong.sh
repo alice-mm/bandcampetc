@@ -106,6 +106,11 @@ _params=(
     # Only “mix” really causes issues; the others are not strictly
     # legal-ish Roman numerals, and dodge the regex anyway.
     'Mill Mid Mix Lid Dim Mic' 'Mill Mid Mix Lid Dim Mic'
+    # Conflicts with French contractions.
+    "a l'est, m'avertir d'avance, merci" "A l'Est, m'Avertir d'Avance, Merci"
+    
+    # Honestly not 100% sure what would be best with those, but I like this:
+    "c'est l'ombre d'énormes arbres" "C'Est l'Ombre d'Énormes Arbres"
 )
 
 for ((i = 0;  i < ${#_params[@]} - 1;  i += 2))
