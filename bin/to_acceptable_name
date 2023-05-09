@@ -293,6 +293,33 @@ sed 's,:, -,g' <<< "${data:-_}" \
         s/ѳ/f̀/g
         s/Ѵ/Ỳ/g
         s/ѵ/ỳ/g
+        
+        # Greek (assuming the text has been turned
+        # into lowercase beforehand)
+        s/α/a/g
+        s/β/b/g
+        s/γ/g/g
+        s/δ/d/g
+        s/ε/e/g
+        s/ζ/z/g
+        s/η/h/g
+        s/θ/th/g
+        s/ι/i/g
+        s/κ/k/g
+        s/λ/l/g
+        s/μ/m/g
+        s/ν/n/g
+        s/ξ/x/g
+        s/ο/o/g
+        s/π/p/g
+        s/ρ/r/g
+        s/σ/s/g
+        s/τ/t/g
+        s/υ/y/g
+        s/φ/f/g
+        s/χ/ch/g
+        s/ψ/ps/g
+        s/ω/w/g
     ' | iconv -f utf8 -t ascii//TRANSLIT | sed -r '
         s/[^[:alnum:]._-]/_/g
         s/__+/_/g

@@ -24,6 +24,8 @@ _params=(
     ðþ                      dth
     'Волшебство Природы'    volsebstvo_prirody
     œæŒÆ                    oeaeoeae
+    'ΨΥΧΙΚΗ ΑΠΟΣΥΝΘΕΣΗ'     psychikh_aposynthesh
+    'Ψυχικη Αποσυνθεση'     psychikh_aposynthesh
     
     'a%b`c°d'   'a_b_c_d'
     
