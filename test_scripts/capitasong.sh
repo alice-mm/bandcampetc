@@ -96,6 +96,14 @@ _params=(
     'WOLVES IN THE THRONE ROOM' 'Wolves in the Throne Room'
     WOLOLOLOLO Wololololo
     SHORT SHORT
+    
+    'foo(bar)(plop)yo'  'Foo(Bar) (Plop)Yo'
+    'foo//bar'          'Foo // Bar'
+    
+    'foo bar – part mmmcmxcix' 'Foo Bar – Part MMMCMXCIX'
+    # Only “mix” really causes issues; the others are not strictly
+    # legal-ish Roman numerals, and dodge the regex anyway.
+    'Mill Mid Mix Lid Dim Mic' 'Mill Mid Mix Lid Dim Mic'
 )
 
 for ((i = 0;  i < ${#_params[@]} - 1;  i += 2))
