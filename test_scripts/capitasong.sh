@@ -18,8 +18,10 @@ _params=(
     'a a a' 'A a A'
     'a b a' 'A B A'
     
-    'a a an the and but or nor at by for from in into of off on onto out over to up upon down with as along back away un une le la les et mais ou ni à aux par pour de des du dans hors sur sous avec vers en dès sans a'
-    'A a an the and but or nor at by for from in into of off on onto out over to up upon down with as along back away un une le la les et mais ou ni à aux par pour de des du dans hors sur sous avec vers en dès sans A'
+    # “A” at the beginning and at the end
+    # to dodge the “first or last word” rule.
+    'a a an the and but or nor at by for from in into of off on onto out over to up upon down with as along back away un une le la les et mais ou ni à aux par pour de des du dans hors sur sous avec vers en dès sans der des dem den ein eines einem einen die der der die eine einer einer eine das des dem das ein eines einem ein die der den die kein keine a'
+    'A a an the and but or nor at by for from in into of off on onto out over to up upon down with as along back away un une le la les et mais ou ni à aux par pour de des du dans hors sur sous avec vers en dès sans der des dem den ein eines einem einen die der der die eine einer einer eine das des dem das ein eines einem ein die der den die kein keine A'
     
     'hey come on, wake up, pack up, dude'
     'Hey Come On, Wake Up, Pack Up, Dude'
