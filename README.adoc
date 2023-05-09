@@ -53,9 +53,9 @@ ImageMagick::   To manipulate cover art. (`imagemagick` package.)
 On Ubuntu and Debian machines, this should be enough to get everything:
 
 [source, bash]
---
+----
 $ sudo apt-get install eyed3 flac rsync unzip imagemagick gawk geany ffmpeg file
---
+----
 
 
 == Contents
@@ -78,23 +78,33 @@ See `bandcamp -h` for help.
 
 === `capitasong`
 
-Try to put capital letters in nice places in song and record titles. This is not perfect, of course, but this script provides a good starting point for metadata cleaning.
+Try to put capital letters in nice places in song and record titles.
+This is not perfect, of course, but this script provides a good starting point for metadata cleaning.
+As time went by, this also became a utility to clean up some common ugly things that have little or even nothing to do with capitalization.
 
 [source, bash]
---
-    $ capitasong "You will blow up a dog some day, as the other guy said"
+----
+  $ capitasong "You will blow up a dog some day, as the other guy said"
 You Will Blow Up a Dog Some Day, as the Other Guy Said
 
-    $ capitasong "Le chien de ta mère est gros"
+  $ capitasong "Le chien de ta mère est gros"
 Le Chien de Ta Mère Est Gros
---
+----
 
-NOTE: Many conventions exist. I used stuff from http://aitech.ac.jp/~ckelly/midi/help/caps.html. (That weird link might become dead or point to something unrelated someday. Use with caution.)
+[NOTE]
+====
+Many conventions exist.
+I used stuff from http://aitech.ac.jp/~ckelly/midi/help/caps.html. (That weird link might become dead or point to something unrelated someday. Use with caution.)
+====
 
 
 === `covers`
 
-Try to fetch cover arts from various sources. An old ugly script of mine. Don’t pay it too much attention. Most album downloads already contain a cover anyway, so this is seldom called.
+Try to fetch cover arts from various sources.
+An old ugly script of mine.
+Don’t pay it too much attention.
+Most album downloads already contain a cover anyway, so this is seldom called.
+This may break as the used websites change their APIs or page layout, etc.
 
 
 === `setcover`
@@ -111,18 +121,19 @@ To prevent art addition (see `setcover`) from making my files oversized, I use a
 
 Used to be able to display metadata from MP3 and FLAC files using the same command. This uses homemade pattern strings.
 
-```
-    $ mmeta '\n%f\n%a, “%t” [%l, %s]\n\t(“%A”, %y, %g)\n\n' ./{salvation,eternal_kingdom/*}/1*
+[source, bash]
+----
+  $ mmeta '\n%f\n%a, “%t” [%l, %s]\n\t(“%A”, %y, %g)\n\n' ./{salvation,eternal_kingdom/*}/1*
 
 ./salvation/1_-_echoes.mp3
 Cult of Luna, “Echoes” [59:09, 13.50 MB]
-	(“Salvation”, 2004, Post-Metal)
+<TAB>(“Salvation”, 2004, Post-Metal)
 
 
 ./eternal_kingdom/flac/10_-_following_betulas.flac
 Cult of Luna, “Following Betulas” [Unknown, Unknown]
-	(“Eternal Kingdom”, 2008, Post-metal)
-```
+<TAB>(“Eternal Kingdom”, 2008, Post-metal)
+----
 
 See `mmeta -h` for help.
 
@@ -132,15 +143,18 @@ See `mmeta -h` for help.
 I _love_ this one. It eats a string and gives a version of it devoid of weird characters. I use it to rename all my music files. Since I buy obscure black metal and stuff, I had to update it to roughly transliterate Cyrillic and Icelandic. It still can’t handle Japanese properly, though. Sorry.
 
 [source, bash]
---
+----
     $ to_acceptable_name <<< "@Œӂ (%s/) «¼___.flac"
 atoez_s_1_4.flac
 
     $ to_acceptable_name <<< '円423 for you.MP3'
 423_yens_for_you.mp3
---
+----
 
-TIP: This script also cuts https://elaltardelholocausto.bandcamp.com/album/i-t[long file names] to 255{nbsp}characters to avoid errors, while trying to keep the file’s extension.
+[TIP]
+====
+This script also cuts https://elaltardelholocausto.bandcamp.com/album/i-t[long file names] to 255{nbsp}characters to avoid errors, while trying to keep the file’s extension.
+====
 
 
 === `give_acceptable_name`
@@ -151,9 +165,9 @@ Use `to_acceptable_name` to find a suitable name for a file, and rename that fil
 ====
 I like to add this as a custom action in my file manager. Typically, in Thunar:
 
-```
+----
 give_acceptable_name %F
-```
+----
 
 (“Edit” → “Configure custom actions…”)
 
@@ -171,25 +185,25 @@ Various settings can be changed in the `config/bandcamp.sh` file.
 To get both a FLAC and an MP3 version of your records, check the part of `config/bandcamp.sh` that looks like this:
 
 [source, bash]
---
+----
 CONVERT_TO_MP3=''
---
+----
 
 To turn the feature on, change this line to:
 
 [source, bash]
---
+----
 CONVERT_TO_MP3=1
---
+----
 
 [TIP]
 ====
 To activate conversion for one specific run, you can use the `-c` option:
 
 [source, bash]
---
+----
 $ bandcamp -c
---
+----
 ====
 
 
@@ -199,7 +213,7 @@ $ bandcamp -c
 To choose the text editor used to edit music metadata, check the part of `config/bandcamp.sh` that looks like this:
 
 [source, bash]
---
+----
 unset -v EDITOR
 #readonly EDITOR=(nano -S)
 #readonly EDITOR=(vi)
@@ -207,13 +221,19 @@ unset -v EDITOR
 #readonly EDITOR=(leafpad)
 #readonly EDITOR=(gedit)
 readonly EDITOR=(geany -i)
---
+----
 
 The commented out lines give you examples for other editors than Geany. Uncomment one of them (while commenting the others), or write your own assignment.
 
-NOTE: I use an indexed array rather than a dumb string to make the script more robust: you can use parameters that contain spaces: `readonly EDITOR=(foo -f 'bar plop' -M)`
+[NOTE]
+====
+I use an indexed array rather than a dumb string to make the script more robust: you can use parameters that contain spaces: `readonly EDITOR=(foo -f 'bar plop' -M)`
+====
 
-TIP: To make the script run without any interaction, use a no-op or any idle-ish command as an editor: `readonly EDITOR=(:)`
+[TIP]
+====
+To make the script run without any interaction, use a no-op or any idle-ish command as an editor: `readonly EDITOR=(:)`
+====
 
 
 == Tests
@@ -224,17 +244,18 @@ I love trying to do unit testing in Bash. Just run `./run_tests.sh` and a bunch 
 
 If everything works as intended, the output should end with a message like:
 
-```
+----
 run_tests.sh: All done (22 files).
-```
+----
 
 [TIP]
 ====
 For development purposes, you can run a subset of the test scripts by passing them as arguments:
 
-```
+[source, bash]
+----
 $ ./run_tests.sh test_scripts/mmeta.sh test_scripts/setcover/gettype.sh
-```
+----
 ====
 
 
@@ -246,22 +267,24 @@ The `run_integration_tests.sh` script runs the unit tests as well as the `bandca
 [#sample-exec]
 == Sample execution of `bandcamp`
 
+(Kinda old; may not reflect perfectly the latest version’s logs.)
+
 With one ZIP from https://giftsfromenola.bandcamp.com/album/from-fathoms in `~/Downloads/`:
 
 [source]
 ----
-    $ bandcamp 
+  $ bandcamp
 bandcamp: Inspecting “/home/alice/Downloads/Gifts From Enola - From Fathoms.zip”...
 Archive:  ./Gifts From Enola - From Fathoms.zip
- extracting: Gifts From Enola - From Fathoms - 01 Benthos.flac  
- extracting: Gifts From Enola - From Fathoms - 02 Weightless Frame.flac  
- extracting: Gifts From Enola - From Fathoms - 03 Weightless Thought.flac  
- extracting: Gifts From Enola - From Fathoms - 04 Trieste.flac  
- extracting: Gifts From Enola - From Fathoms - 05 Resurface.flac  
- extracting: Gifts From Enola - From Fathoms - 06 Melted Wings.flac  
- extracting: Gifts From Enola - From Fathoms - 07 Thawed Horizon.flac  
- extracting: Gifts From Enola - From Fathoms - 08 Aves.flac  
- extracting: cover.jpg               
+ extracting: Gifts From Enola - From Fathoms - 01 Benthos.flac
+ extracting: Gifts From Enola - From Fathoms - 02 Weightless Frame.flac
+ extracting: Gifts From Enola - From Fathoms - 03 Weightless Thought.flac
+ extracting: Gifts From Enola - From Fathoms - 04 Trieste.flac
+ extracting: Gifts From Enola - From Fathoms - 05 Resurface.flac
+ extracting: Gifts From Enola - From Fathoms - 06 Melted Wings.flac
+ extracting: Gifts From Enola - From Fathoms - 07 Thawed Horizon.flac
+ extracting: Gifts From Enola - From Fathoms - 08 Aves.flac
+ extracting: cover.jpg
 
   ╭────────────────────────────────────────────╌╌┄┄┈┈
   │ Type:    flac
