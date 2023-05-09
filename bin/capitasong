@@ -171,6 +171,13 @@ do
         # Spacing between “)” and “(”.
         s,\)[ \t]*\(,) (,g
         
+        # Only capitalize in-parentheses parts if it’s not a
+        # part of a bigger word: “foo(s)”
+        s,([[:alpha:]]\()([[:alpha:]]),\1\l\2,g
+        # Similarly, avoid capitalizing the remainder of a word
+        # that starts with an in-parentheses part: “(de)bunk”
+        s,(\([[:alpha:]]+\))([[:alpha:]]),\1\l\2,g
+        
         # Roman numerals.
         # https://stackoverflow.com/a/10441405
         s/\bM{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})\b/\U&/ig
@@ -179,9 +186,14 @@ do
         s/\b[DLM]'"'"'/\L&/g
         
         # First word:
-        s/^([^[:alnum:]]*)([[:alnum:]])/\1\u\2/
+        s/^([^[:alnum:]]*)([[:alnum:]()])/\1\u\2/
         # Last word:
-        s/([[:alnum:]]*)([^[:alnum:]]*)$/\u\1\2/
+        s/([[:alnum:]()]*)([^[:alnum:]]*)$/\u\1\2/
+        # In both cases:
+        # • We skip non-alnum characters, to allow final punctuation
+        #   and the like.
+        # • We allow “(foo)” prefixes and suffixes by counting
+        #   parentheses as parts of the words, somewhat.
     ' <<< "$title"
 done
 

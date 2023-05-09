@@ -99,8 +99,10 @@ _params=(
     WOLOLOLOLO Wololololo
     SHORT SHORT
     
-    'foo(bar)(plop)yo'  'Foo(Bar) (Plop)Yo'
-    'foo//bar'          'Foo // Bar'
+    'foo (bar)(plop) yo'    'Foo (Bar) (Plop) Yo'
+    'foo (bar)   (plop) yo' 'Foo (Bar) (Plop) Yo'
+    'foo//bar'              'Foo // Bar'
+    'foo/   /bar'           'Foo // Bar'
     
     'foo bar – part mmmcmxcix' 'Foo Bar – Part MMMCMXCIX'
     # Only “mix” really causes issues; the others are not strictly
@@ -111,6 +113,11 @@ _params=(
     
     # Honestly not 100% sure what would be best with those, but I like this:
     "c'est l'ombre d'énormes arbres" "C'Est l'Ombre d'Énormes Arbres"
+    
+    'A infidèle(s) A'   'A Infidèle(s) A'
+    'infidèle(s)'       'Infidèle(s)'
+    'A (de)bunk A'      'A (De)bunk A'
+    '(de)bunk'          '(De)bunk'
 )
 
 for ((i = 0;  i < ${#_params[@]} - 1;  i += 2))
