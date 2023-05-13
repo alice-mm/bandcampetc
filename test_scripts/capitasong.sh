@@ -141,6 +141,13 @@ _params=(
     '2nde'      '2de'
     '2nds'      '2ds'
     '2ndes'     '2des'
+    
+    "i'm you"       "I'm You"
+    "yes i'm you"   "Yes I'm You"
+    "yes i'm"       "Yes I'm"
+    "i've you"      "I've You"
+    "yes i've you"  "Yes I've You"
+    "yes i've"      "Yes I've"
 )
 
 for ((i = 0;  i < ${#_params[@]} - 1;  i += 2))
