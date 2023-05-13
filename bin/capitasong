@@ -2,6 +2,7 @@
 
 # Read song titles through arguments
 # and capitalize them correctly in most cases.
+# Also does a bit of cleaning for common ugly things.
 
 # Rules taken from http://aitech.ac.jp/~ckelly/midi/help/caps.html
 # Old weird link, not guaranteed to work forever,
@@ -181,7 +182,10 @@ do
         # Roman numerals.
         # https://stackoverflow.com/a/10441405
         s/\bM{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})\b/\U&/ig
+        # “mix” is far more common as a word than as a number.
         s/\bMIX\b/Mix/g
+        # The “m” of “I’m” is not a number either.
+        s/\bI'"'"'M\b/I'"'"'m/g
         # Conflict with French contractions.
         s/\b[DLM]'"'"'/\L&/g
         
@@ -203,12 +207,13 @@ do
         # First word:
         s/^([^[:alnum:]]*)([[:alnum:]()])/\1\u\2/
         # Last word:
-        s/([[:alnum:]()]*)([^[:alnum:]]*)$/\u\1\2/
+        s/([[:alnum:]()'"'"']*)([^[:alnum:]]*)$/\u\1\2/
         # In both cases:
         # • We skip non-alnum characters, to allow final punctuation
         #   and the like.
         # • We allow “(foo)” prefixes and suffixes by counting
         #   parentheses as parts of the words, somewhat.
+        # We also allow apostrophe-based contractions for the last word.
     ' <<< "$title"
 done
 
