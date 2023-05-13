@@ -26,6 +26,8 @@ _params=(
     œæŒÆ                    oeaeoeae
     'ΨΥΧΙΚΗ ΑΠΟΣΥΝΘΕΣΗ'     psychikh_aposynthesh
     'Ψυχικη Αποσυνθεση'     psychikh_aposynthesh
+    γɣ                      gg
+    ßσς                     ssss
     
     'a%b`c°d'   'a_b_c_d'
     

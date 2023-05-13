@@ -298,7 +298,7 @@ sed 's,:, -,g' <<< "${data:-_}" \
         # into lowercase beforehand)
         s/α/a/g
         s/β/b/g
-        s/γ/g/g
+        s/[γɣ]/g/g
         s/δ/d/g
         s/ε/e/g
         s/ζ/z/g
@@ -313,7 +313,7 @@ sed 's,:, -,g' <<< "${data:-_}" \
         s/ο/o/g
         s/π/p/g
         s/ρ/r/g
-        s/σ/s/g
+        s/[σς]/s/g
         s/τ/t/g
         s/υ/y/g
         s/φ/f/g
