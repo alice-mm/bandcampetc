@@ -617,6 +617,13 @@ function retag_mp3 {
         --genre="${t[genre]}"
     )
     
+    if [[ $EYED3_ALBUMARTIST_SUPPORT && ${t[albumartist]} ]]
+    then
+        optns+=(
+            --album-artist="${t[albumartist]}"
+        )
+    fi
+    
     safe_year=$(tr -cd '0-9' <<< "${t[year]}")
     
     if [ "$safe_year" ] && [ "$safe_year" -gt 0 ]

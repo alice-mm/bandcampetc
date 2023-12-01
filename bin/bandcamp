@@ -142,7 +142,7 @@ fi
 # Grmbl, eyeD3 keeps breaking backwards compatibility
 # and their changelog is not *that* informative.
 unset -v EYED3_ENCODING_OPT
-if eyeD3 --help | grep -q -- '--set-encoding[= \t]'
+if eyeD3 --help 2> /dev/null | grep -q -- '--set-encoding[= \t]'
 then
     readonly EYED3_ENCODING_OPT=('--set-encoding=utf8')
 else
@@ -151,6 +151,15 @@ fi
 debug 'EYED3_ENCODING_OPT=(%s )' "$(
     printf ' %q' "${EYED3_ENCODING_OPT[@]}"
 )"
+
+# I’m not sure that option was there when I started.
+if eyeD3 --help 2> /dev/null | grep -q -- '--album-artist[= \t]'
+then
+    readonly EYED3_ALBUMARTIST_SUPPORT=1
+else
+    readonly EYED3_ALBUMARTIST_SUPPORT=''
+fi
+debug 'EYED3_ALBUMARTIST_SUPPORT=%q' "$EYED3_ALBUMARTIST_SUPPORT"
 
 
 readonly DIR_TEMP=$(

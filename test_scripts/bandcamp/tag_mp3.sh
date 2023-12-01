@@ -8,6 +8,7 @@ set -evx
 
 unset -v EYED3_ENCODING_OPT
 EYED3_ENCODING_OPT=(foo bar plop)
+EYED3_ALBUMARTIST_SUPPORT=1
 
 
 callfile=$(mktemp "${TMPDIR:-/tmp}"/bandcamp-test-tag-mp3-XXXXXXXX)
@@ -30,6 +31,7 @@ function eyeD3 {
         --track=42
         --track-total=98
         --genre=Genre
+        --album-artist='Foo Alb Art'
         -Y 1899
         
         dest.mp3
@@ -49,15 +51,20 @@ _status=0
 
 # Should exit the subshell because of missing args.
 # The “true” should therefore not be executed.
-! ( retag_mp3;                  true )
-! ( retag_mp3 foo;              true )
-! ( retag_mp3 '' bar;           true )
-! ( retag_mp3 foo bar plop;     true )
-! ( retag_mp3 foo bar plop '';  true )
+if  ( retag_mp3;                  true ) ||
+    ( retag_mp3 foo;              true ) ||
+    ( retag_mp3 '' bar;           true ) ||
+    ( retag_mp3 foo bar plop;     true ) ||
+    ( retag_mp3 foo bar plop '';  true )
+then
+    : Should have failed.
+    exit 1
+fi
 
 unset -v meta
 declare -A meta=(
     [artist]='a b'
+    [albumartist]='Foo Alb Art'
     [album]='C d Ef'
     [maxtrack]=98
     [genre]=Genre
@@ -100,6 +107,7 @@ function eyeD3 {
         --track=42
         --track-total=98
         --genre=Genre
+        --album-artist='Foo Alb Art'
         
         dest.mp3
     )
@@ -117,6 +125,7 @@ function eyeD3 {
 unset -v meta
 declare -A meta=(
     [artist]='a b'
+    [albumartist]='Foo Alb Art'
     [album]='C d Ef'
     [maxtrack]=98
     [genre]=Genre
