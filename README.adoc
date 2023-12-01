@@ -106,6 +106,15 @@ Don’t pay it too much attention.
 Most album downloads already contain a cover anyway, so this is seldom called.
 This may break as the used websites change their APIs or page layout, etc.
 
+[WARNING]
+====
+Since Bandcamp albums always contain a cover art already, I don’t devote time to the `covers` script.
+It can still fetch stuff from Wikipedia (which can lead to some surprises, for better or for worse), but that’s about it.
+See also https://github.com/alice-mm/bandcampetc/issues/41[].
+
+I encourage you to manually add a `cover.jpg` file to ZIPs that come from somewhere else than Bandcamp, so that the main script will grab that and call it a day.
+====
+
 
 === `setcover`
 
