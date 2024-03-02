@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
@@ -34,7 +34,11 @@ tdir=$(mktemp -d "${TMPDIR:-/tmp}"/bandcamp-clean-test-XXXXXXXX)
 
 cd "${tdir:?}"
 
-! ( clean_all_file_names; true )
+if ( clean_all_file_names; true )
+then
+    : Should have failed
+    exit 1
+fi
 
 mkdir -p storage/{foo,bar,plop}/
 touch storage/foo/'jRæŸ=r (foo1) bar'.flac

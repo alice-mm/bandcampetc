@@ -5,7 +5,7 @@ function clean_between_runs {
 }
 
 
-set -evx
+set -ex
 
 # Go to project.
 cd /bc/

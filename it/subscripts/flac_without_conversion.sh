@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 
 cp -v it/assets/fake_album_flac_version.zip ~/Downloads/

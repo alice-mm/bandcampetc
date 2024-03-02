@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
@@ -35,9 +35,21 @@ CONVERTED_MP3_RATE=154k
 
 # Should exit the subshell because of missing args.
 # The “true” should therefore not be executed.
-( convert_to_mp3;           true ) && exit 1
-( convert_to_mp3 foo;       true ) && exit 1
-( convert_to_mp3 '' bar;    true ) && exit 1
+if ( convert_to_mp3;           true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( convert_to_mp3 foo;       true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( convert_to_mp3 '' bar;    true )
+then
+    : Should have failed
+    exit 1
+fi
 
 unset -v _called _ok
 convert_to_mp3 src.flac dest.mp3
@@ -47,6 +59,10 @@ test "$_ok"
 _status=1
 
 unset -v _called _ok
-! convert_to_mp3 src.flac dest.mp3
+if convert_to_mp3 src.flac dest.mp3
+then
+    : Should have failed
+    exit 1
+fi
 test "$_called"
 test "$_ok"

@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/setcover_functions.sh
 . lib/setcover_functions.sh
@@ -18,8 +18,16 @@ function metaflac {
 }
 
 
-! ( get_flac_cover_front_block_nums; true )
-! ( get_flac_cover_front_block_nums ''; true )
+if ( get_flac_cover_front_block_nums; true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( get_flac_cover_front_block_nums ''; true )
+then
+    : Should have failed
+    exit 1
+fi
 
 
 : No pic.

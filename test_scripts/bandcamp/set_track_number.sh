@@ -1,14 +1,26 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
 
 
-! ( set_track_number_for_mp3;           true )
-! ( set_track_number_for_mp3 foo;       true )
-! ( set_track_number_for_mp3 '' bar;    true )
+if ( set_track_number_for_mp3;           true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( set_track_number_for_mp3 foo;       true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( set_track_number_for_mp3 '' bar;    true )
+then
+    : Should have failed
+    exit 1
+fi
 
 unset -v _calls
 declare -a _calls
@@ -23,15 +35,31 @@ test "${_calls[0]}" = '--to-v2.4 --no-color --track=42 foo/bar.mp3'
 
 # Should fail if tagging fails.
 function eyeD3 { false; }
-! set_track_number_for_mp3 foo/bar.mp3 42
+if set_track_number_for_mp3 foo/bar.mp3 42
+then
+    : Should have failed
+    exit 1
+fi
 
 
 : MP3 ↑ / ↓ FLAC
 
 
-! ( set_track_number_for_flac;          true )
-! ( set_track_number_for_flac foo;      true )
-! ( set_track_number_for_flac '' bar;   true )
+if ( set_track_number_for_flac;          true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( set_track_number_for_flac foo;      true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( set_track_number_for_flac '' bar;   true )
+then
+    : Should have failed
+    exit 1
+fi
 
 unset -v _calls
 declare -a _calls
@@ -46,7 +74,11 @@ test "${_calls[0]}" = '--dont-use-padding --remove-tag=TRACKNUMBER --set-tag=TRA
 
 # Should fail if tagging fails.
 function metaflac { false; }
-! set_track_number_for_flac foo/bar.flac 42
+if set_track_number_for_flac foo/bar.flac 42
+then
+    : Should have failed
+    exit 1
+fi
 
 
 : Generic function.
@@ -84,7 +116,11 @@ done
 for path in lsilsi lsi.txt FOO.PDF ./././.
 do
     unset -v _called_mp3 _called_flac
-    ! set_track_number_for_file "$path" 42
+    if set_track_number_for_file "$path" 42
+    then
+        : Should have failed
+        exit 1
+    fi
     test -z "$_called_mp3"
     test -z "$_called_flac"
 done

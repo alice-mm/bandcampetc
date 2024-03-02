@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
@@ -86,7 +86,11 @@ _DATA_
 # Should skip this album.
 unset -v m
 declare -A m
-! read_metafile m tracks
+if read_metafile m tracks
+then
+    : Should have failed
+    exit 1
+fi
 
 
 

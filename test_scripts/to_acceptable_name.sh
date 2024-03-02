@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 readonly THE_SCRIPT=bin/to_acceptable_name
 

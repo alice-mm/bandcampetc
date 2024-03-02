@@ -1,14 +1,26 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
 
 
-! ( get_artist_for_track; true )
-! ( get_artist_for_track foo; true )
-! ( get_artist_for_track 1; true )
+if ( get_artist_for_track; true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( get_artist_for_track foo; true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( get_artist_for_track 1; true )
+then
+    : Should have failed
+    exit 1
+fi
 
 
 unset -v meta

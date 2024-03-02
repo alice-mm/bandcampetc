@@ -152,7 +152,11 @@ function clean_hierarchy {
 # $1    Path to ZIP archive.
 # Exits with 0 status iff it contains a “.mp3” or “.flac” file.
 function mp3_or_flac_in_zip {
-    unzip -l "${1:?No archive given.}" | grep -iqE '.\.(flac|mp3)$'
+    local archive=${1:?No archive given.}
+    (
+        set -o pipefail
+        unzip -l "$archive" | grep -iqE '.\.(flac|mp3)$'
+    )
 }
 
 

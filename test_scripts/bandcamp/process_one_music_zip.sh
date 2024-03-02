@@ -1,12 +1,16 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
 
 
-! ( process_one_music_zip; true )
+if ( process_one_music_zip; true )
+then
+    : Should have failed
+    exit 1
+fi
 
 COVERS=mock_covers
 

@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
@@ -18,7 +18,11 @@ tdir=$(mktemp -d "${TMPDIR:-/tmp}"/bandcamp-cover-test-XXXXXXXX)
 
 cd "${tdir:?}"
 
-! ( process_and_move_existing_cover; true )
+if ( process_and_move_existing_cover; true )
+then
+    : Should have failed
+    exit 1
+fi
 
 : Basic case.
 mkdir -p storage/{mp3,flac} some/random/location
