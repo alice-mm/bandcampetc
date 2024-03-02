@@ -6,10 +6,13 @@ Scripts to keep music tidy.
 
 The main script (`bandcamp`) can be used to *extract* and *clean* files (allow to review and easily edit some *metadata* fields) from https://bandcamp.com/[Bandcamp] and Amazon Music downloads.
 The files are then *stored* in a configurable location, in neatly named *directories*.
-
-It should work with pretty much *any ZIP archive that contains MP3 or FLAC files*, actually. <<sample-exec,See example below.>>
+It should work with pretty much *any ZIP archive that contains MP3 or FLAC files*.
+<<sample-exec,See example below.>>
 
 Some other scripts, here, are dependencies of the `bandcamp` one, but can also be used on their own for various purposes.
+
+I don’t do proper releases nor use tags at the moment, but I try to keep `master` fairly stable.
+Ping me if you think I screwed up somewhere.
 
 
 == Getting started
