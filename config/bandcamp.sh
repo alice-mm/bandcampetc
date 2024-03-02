@@ -1,3 +1,6 @@
+#! /usr/bin/env bash
+# shellcheck disable=SC2034
+
 # Set music directory. Just remove these lines and
 # hard-code a path if you want to use something else:
 #
@@ -10,7 +13,7 @@ do
     then
         break
     fi
-    
+
     # Try in lowercase.
     if [ -d "${one_dir,,}" ]
     then
@@ -23,6 +26,7 @@ readonly DIR_M=$one_dir
 # Set to non empty value to convert FLAC files to MP3.
 # I used to keep everything in both formats, and then ran out of space.
 # Now I convert to MP3 on the fly when putting music on my phone or whatever.
+# Edit: Now I only choose FLAC for releases that seem to deserve it.
 CONVERT_TO_MP3=''
 
 # EDITOR is a text editor command with options, in an indexed array.
@@ -40,6 +44,7 @@ unset -v EDITOR
 #readonly EDITOR=(mousepad)
 #readonly EDITOR=(leafpad)
 #readonly EDITOR=(gedit)
+#readonly EDITOR=(code --new-window --wait)
 readonly EDITOR=(geany -i)
 
 # avconv replaced ffmpeg in Ubuntu's repositories. The options I use exist
