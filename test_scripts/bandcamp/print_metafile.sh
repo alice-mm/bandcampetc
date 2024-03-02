@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
@@ -11,11 +11,11 @@ function mock_mmeta {
         '2 %T\n '*)
             echo 03/009
             ;;
-        
+
         '3 -e %t '*)
             echo 'a a b a a'
             ;;
-        
+
         *)
             exit 1
             ;;
@@ -40,6 +40,7 @@ meta=(
     [album]='lsi dldldl lsi'
     [year]=1998
     [genre]='lsi nrnrnr lsi'
+    [musicbrainztags]=$'Foo bar\nPlop yo'
 )
 
 test "$(print_metafile_content osef meta)" = "$(
@@ -65,6 +66,7 @@ ARTIST      = lsi lsi lsi
 ALBUMARTIST = lsi uyuyu lsi
 ALBUM       = lsi dldldl lsi
 YEAR        = 1998
+# Best MusicBrainz tags: “Foo bar” “Plop yo”
 GENRE       = lsi nrnrnr lsi
 
 # <Track #> = <Title>
@@ -96,11 +98,11 @@ function mock_mmeta {
         '2 %T\n '*)
             echo 03/009
             ;;
-        
+
         '3 -e %t '*)
             # No title available, say nothing.
             ;;
-        
+
         *)
             exit 1
             ;;

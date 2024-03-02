@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
@@ -12,7 +12,11 @@ RENAME=${SCR_DIR}/../../bin/to_acceptable_name
 test -x "$RENAME"
 
 # No music directory set.
-! ( compute_final_dir_path; true )
+if ( compute_final_dir_path; true )
+then
+    : Should have failed
+    exit 1
+fi
 
 DIR_M=poire/tourte
 

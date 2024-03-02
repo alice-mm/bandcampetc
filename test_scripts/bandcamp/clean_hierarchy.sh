@@ -1,16 +1,32 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
 
 
-( clean_hierarchy;          true ) && exit 1
-( clean_hierarchy '';       true ) && exit 1
-( clean_hierarchy '' foo;   true ) && exit 1
+if ( clean_hierarchy;          true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( clean_hierarchy '';       true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( clean_hierarchy '' foo;   true )
+then
+    : Should have failed
+    exit 1
+fi
 
-! clean_hierarchy /does/not/exist/of/course
+if clean_hierarchy /does/not/exist/of/course
+then
+    : Should have failed
+    exit 1
+fi
 
 tdir=$(mktemp -d "${TMPDIR:-/tmp}"/bandcamp-test-cleaning-XXXXXXXX)
 test -d "${tdir:?}"
@@ -18,9 +34,21 @@ test -d "${tdir:?}"
 mkdir -p "$tdir"/foo/bar/plop/{aa,.hbb} "$tdir"/foo/yo
 touch "$tdir"/foo/bar/plop/{aa/,.hbb/,}{f1,f2,f3,.hf1,.hf2}
 
-! clean_hierarchy "$tdir"/foo
-! clean_hierarchy "$tdir"/foo/bar/plop
-! clean_hierarchy "$tdir"/foo/bar/plop/aa
+if clean_hierarchy "$tdir"/foo
+then
+    : Should have failed
+    exit 1
+fi
+if clean_hierarchy "$tdir"/foo/bar/plop
+then
+    : Should have failed
+    exit 1
+fi
+if clean_hierarchy "$tdir"/foo/bar/plop/aa
+then
+    : Should have failed
+    exit 1
+fi
 
 clean_hierarchy "$tdir"/foo/bar
 clean_hierarchy "$tdir"

@@ -1,17 +1,32 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
 
 
-! ( init_metadata;          true )
-! ( init_metadata foo;      true )
-! ( init_metadata '' bar;   true )
+GETGENRE=mock_getgenre
 
-# Set args, but file not found.
-! init_metadata foo bar
+
+if
+    ( init_metadata;          true ) ||
+    ( init_metadata foo;      true ) ||
+    ( init_metadata '' bar;   true )
+then
+    : Should have failed
+    exit 1
+fi
+
+
+: Set args, but file not found
+
+if init_metadata foo bar
+then
+    : Should have failed
+    exit 1
+fi
+
 
 tempf=$(mktemp "${TMPDIR:-/tmp}"/bandcamp-init-test-XXXXXXXX)
 test "$tempf"
@@ -50,7 +65,9 @@ test "${meta[album]}"       = 'Alb (UM)'
 test "${meta[year]}"        = 2016
 test "${meta[genre]}"       = 'Some genre'
 
-# Force the use of the fallback function to find a genre.
+
+: Force the use of the fallback function to find a genre
+
 MMETA_PLACEHOLDER='????'
 _mock_mmeta_genre='????'
 function try_to_guess_genre {
@@ -68,8 +85,9 @@ test "${meta[album]}"       = 'Alb (UM)'
 test "${meta[year]}"        = 2016
 test "${meta[genre]}"       = jrijrijri
 
-# Force the use of the fallback function,
-# but make it fail, too.
+
+: Force the use of the fallback function, but make it fail, too
+
 MMETA_PLACEHOLDER='????'
 _mock_mmeta_genre='????'
 
@@ -91,3 +109,22 @@ test "${meta[albumartist]}" = 'A R T Ist'
 test "${meta[album]}"       = 'Alb (UM)'
 test "${meta[year]}"        = 2016
 test "${meta[genre]}"       = '????'
+
+
+: Rely on MusicBrainz
+
+try_to_guess_genre() { :; }
+mock_getgenre() {
+    echo 'The genre'
+    echo 'A suggestion'
+}
+
+init_metadata "$tempf" meta
+test "$(cat "$tempf_callcheck")" = CALLED
+
+test "${meta[artist]}"      = 'A R T Ist'
+test "${meta[albumartist]}" = 'A R T Ist'
+test "${meta[album]}"       = 'Alb (UM)'
+test "${meta[year]}"        = 2016
+test "${meta[genre]}"       = 'The genre'
+test "${meta[musicbrainztags]}" = $'The genre\nA suggestion'

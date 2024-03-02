@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/setcover_functions.sh
 . lib/setcover_functions.sh

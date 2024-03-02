@@ -1,8 +1,15 @@
 = Bandcamp, etc. (`bandcampetc`)
-:toc:
-:toclevels: 0
+:toc: preamble
+:toclevels: 2
 
-Scripts to keep music tidy. The main one extracts and cleans files from https://bandcamp.com/[Bandcamp] and Amazon Music downloads. It should work with pretty much any ZIP archive that contains MP3 or FLAC files, actually. <<sample-exec,See example below.>>
+Scripts to keep music tidy.
+
+The main script (`bandcamp`) can be used to *extract* and *clean* files (allow to review and easily edit some *metadata* fields) from https://bandcamp.com/[Bandcamp] and Amazon Music downloads.
+The files are then *stored* in a configurable location, in neatly named *directories*.
+
+It should work with pretty much *any ZIP archive that contains MP3 or FLAC files*, actually. <<sample-exec,See example below.>>
+
+Some other scripts, here, are dependencies of the `bandcamp` one, but can also be used on their own for various purposes.
 
 
 == Getting started
@@ -15,47 +22,77 @@ Scripts to keep music tidy. The main one extracts and cleans files from https://
 
 .`~/.bashrc`
 [source, bash]
---
+----
 PATH+=':~/bin/bandcampetc/bin/'
 export PATH
---
+----
 
-WARNING: Make sure you adapt the `~/bin/bandcampetc/bin/` path of the example according to where you saved this project.
+[WARNING]
+====
+Make sure you adapt the `~/bin/bandcampetc/bin/` path of the example according to where you saved this project.
+====
 
 
 === Dependencies
 
 The `bandcamp` script relies on:
 
-[horizontal]
-Bash version ≥ 4::  Because associative arrays. Should already be OK except maybe on old Macs.
+Bash · version ≥ 4.3::  Because associative arrays and variables declared with `-n`.
+Should already be OK on most machines.
 
-`eyeD3`::       Manipulate MP3 metadata. Note that the software’s package is generally called `eyed3`.
-                These guys often break backward compatibility… I adapted my commands at least to versions `0.6.18` (Ubuntu 16) and `0.7.10` (Debian 9). <<contact-section,Tell me>> if you get “unrecognized arguments” errors.
+`eyeD3`::
+Manipulate MP3 metadata. Note that the software’s package is generally called `eyed3`.
+These guys often break backward compatibility…
+I adapted my commands firstly to version `0.6.18` (Ubuntu 16) and later to `0.7.10` (Debian 9).
+<<contact-section,Tell me>> if you get “unrecognized arguments” errors.
 
-`metaflac`::    Manipulate FLAC metadata. Bundled with the `flac` package.
+`metaflac`::
+Manipulate FLAC metadata.
+Bundled with the `flac` package.
 
-`rsync`::       “A fast, versatile, remote (and local) file-copying tool.”
+`rsync`::
+“A fast, versatile, remote (and local) file-copying tool.”
 
-`unzip`::       Decompress ZIP archives.
+`unzip`::
+Decompress ZIP archives.
 
-ImageMagick::   To manipulate cover art. (`imagemagick` package.)
+ImageMagick::
+To manipulate cover art. (`imagemagick` package.)
 
-`awk`::         “Pattern scanning and processing language.” GNU’s `gawk` implementation recommended, but the minimal implementation `mawk` does the job.
+`awk`::
+“Pattern scanning and processing language.”
+GNU’s `gawk` implementation recommended, but the minimal implementation `mawk` does the job.
 
-`geany`::       … as a recommended simple text editor to revise music metadata. You can use <<config-editor,any other editor by changing a constant’s value>> in `config/bandcamp.sh`.
+`geany`::
+… as a recommended simple text editor to revise music metadata.
+You can use <<config-editor,any other editor by changing a constant’s value>> in `config/bandcamp.sh`.
 
-`ffmpeg` or `avconv`::  For FLAC → MP3 conversions. *(Optional, see <<convert-config,the config section>>.)*
+`ffmpeg` or `avconv`::
+For FLAC → MP3 conversions. +
+*(Optional, see <<convert-config,the config section>>.)*
 
-`file`::        Installed on most distributions, but missing from some Docker images.
-                The package is also called `file`.
+`file`::
+Installed on most distributions, but missing from some Docker images.
+The package is also called `file`.
 
+`curl` · version ≥ 7.67.0::
+To send HTTP requests to the MusicBrainz API. +
+*(Optional, for the `getgenre` script.)*
+
+`jq`::
+To process the data sent back by the MusicBrainz API.
+Version{nbsp}``1.6`` is recommended, but it _may_ work with older ones. +
+*(Optional, for the `getgenre` script.)*
+
+[TIP]
+====
 On Ubuntu and Debian machines, this should be enough to get everything:
 
 [source, bash]
 ----
-$ sudo apt-get install eyed3 flac rsync unzip imagemagick gawk geany ffmpeg file
+$ sudo apt install eyed3 flac rsync unzip imagemagick gawk geany ffmpeg file jq curl
 ----
+====
 
 
 == Contents
@@ -67,10 +104,15 @@ The main script, at least from my point of view. When you download music from Ba
 This script can be run from anywhere (it has no importance) without argument.
 
 1. It will look for ZIPs in `~/Downloads/`, `~/Téléchargements/`, `~/Descargas/`, `~/Загрузки/`… You can also give ZIPs directly as arguments to the script.
+
 2. For each ZIP that contains MP3 or FLAC files, the files will be extracted.
+
 3. You will be offered the possibility to edit the music’s metadata in a text editor.
+
 4. The files will be tagged and named according to the cleaned version of the metadata.
-5. If the album is in FLAC format and if the `CONVERT_TO_MP3` constant has been set to a non empty value, an MP3 version of the record will be generated alongside the FLAC version.
+
+5. If the album is in FLAC format and if the `CONVERT_TO_MP3` constant has been set to a non-empty value, an MP3 version of the record will be generated alongside the FLAC version.
+
 6. The original ZIP will be discarded.
 
 See `bandcamp -h` for help.
@@ -94,8 +136,43 @@ Le Chien de Ta Mère Est Gros
 [NOTE]
 ====
 Many conventions exist.
-I used stuff from http://aitech.ac.jp/~ckelly/midi/help/caps.html. (That weird link might become dead or point to something unrelated someday. Use with caution.)
+I used stuff from +http://aitech.ac.jp/~ckelly/midi/help/caps.html+.
+(That weird link might become dead or point to something unrelated someday.
+Use with caution.)
 ====
+
+
+=== `getgenre`
+
+Try to get a musical genre from tags found on MusicBrainz.
+Can try to target a specific release or (on purpose or as a fallback) an artist itself.
+
+By default, only the best tag is printed out, but `-n, --number` can be used to ask for more.
+In such cases, the best tags will come first.
+
+.Sample calls
+====
+.Specific album, two results
+[source, bash]
+----
+  $ getgenre -a 'sigur ros' -r kveikur -n 2
+Post-rock
+Rock
+----
+
+.Artist as a whole, single result, long option name
+[source, bash]
+----
+  $ getgenre --artist 'negura bunget'
+Black metal
+----
+====
+
+.Getting help
+[source, bash]
+----
+$ getgenre -h
+----
 
 
 === `covers`
@@ -229,10 +306,12 @@ unset -v EDITOR
 #readonly EDITOR=(mousepad)
 #readonly EDITOR=(leafpad)
 #readonly EDITOR=(gedit)
+#readonly EDITOR=(code --new-window --wait)
 readonly EDITOR=(geany -i)
 ----
 
-The commented out lines give you examples for other editors than Geany. Uncomment one of them (while commenting the others), or write your own assignment.
+The commented out lines give you examples for other editors than Geany.
+Uncomment one of them (while commenting the others), or write your own assignment.
 
 [NOTE]
 ====
@@ -244,12 +323,21 @@ I use an indexed array rather than a dumb string to make the script more robust:
 To make the script run without any interaction, use a no-op or any idle-ish command as an editor: `readonly EDITOR=(:)`
 ====
 
+[CAUTION]
+====
+The editor _must_ block the execution flow, so that you’re able to edit the metadata, save, and close it _before_ the rest of the script runs.
+Some editors, like Visual Studio Code, tend to launch themselves in the background – much like when appending `&` to a command – on their own, and may require tweaks to be used properly in this context.
+Some have options to avoid this: use `code --wait` instead of just `code` for Visual Studio Code and you should be OK.
+====
+
 
 == Tests
 
 === Unit tests
 
-I love trying to do unit testing in Bash. Just run `./run_tests.sh` and a bunch of commands will be executed. The first failure stops the execution (`set -e`) and you should be able to see what failed in the output.
+I love trying to do unit testing in Bash.
+Just run `./run_tests.sh` and a bunch of commands will be executed.
+The first failure stops the execution (`set -e`) and you should be able to see what failed in the output.
 
 If everything works as intended, the output should end with a message like:
 
@@ -270,7 +358,8 @@ $ ./run_tests.sh test_scripts/mmeta.sh test_scripts/setcover/gettype.sh
 
 === Integration tests
 
-The `run_integration_tests.sh` script runs the unit tests as well as the `bandcamp` script in a Debian Docker container. Nothing fancy for now as I’m no Docker expert, but it allowed me to improve stuff already.
+The `run_integration_tests.sh` script runs the unit tests as well as the `bandcamp` script in a Debian Docker container.
+Nothing fancy for now as I’m no Docker expert, but it allowed me to improve stuff already.
 
 
 [#sample-exec]

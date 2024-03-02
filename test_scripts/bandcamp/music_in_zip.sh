@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
@@ -13,6 +13,9 @@ function unzip {
         printf '%s\n' "$_data"
     fi
 }
+
+
+: Yes
 
 for _data in 'seljpsjpbse
 peljséjpseéjp épet ldpe
@@ -34,6 +37,9 @@ eélpedtpéelp plédtelép'
 do
     mp3_or_flac_in_zip foo
 done
+
+
+: Nope
 
 for _data in 'seljpsjpbse
 peljséjpseéjp épet ldpe
@@ -65,9 +71,17 @@ peljséjpseéjp épet ldpe
 eétledpételdé
 eélpedtpéelp plédtelép'
 do
-    ! mp3_or_flac_in_zip foo
+    if mp3_or_flac_in_zip foo
+    then
+        : Should have failed
+        exit 1
+    fi
 done
 
 # No argument.
 _data=foo.mp3
-! mp3_or_flac_in_zip
+if (mp3_or_flac_in_zip; true)
+then
+    : Should have failed
+    exit 1
+fi

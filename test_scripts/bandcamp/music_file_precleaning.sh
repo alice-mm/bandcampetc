@@ -1,12 +1,16 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
 
 
-! ( music_file_precleaning; true )
+if ( music_file_precleaning; true )
+then
+    : Should have failed
+    exit 1
+fi
 
 tdir=$(mktemp -d "${TMPDIR:-/tmp}"/bandcamp-test-preclean-XXXXXXXX)
 cd "${tdir:?}"

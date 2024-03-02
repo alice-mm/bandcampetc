@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
@@ -21,12 +21,36 @@ function mock_mmeta {
 
 MMETA=mock_mmeta
 
-! ( process_one_source_file;            true )
-! ( process_one_source_file a;          true )
-! ( process_one_source_file a b;        true )
-! ( process_one_source_file '' b c;     true )
-! ( process_one_source_file a '' c;     true )
-! ( process_one_source_file '' '' c;    true )
+if ( process_one_source_file;            true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( process_one_source_file a;          true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( process_one_source_file a b;        true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( process_one_source_file '' b c;     true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( process_one_source_file a '' c;     true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( process_one_source_file '' '' c;    true )
+then
+    : Should have failed
+    exit 1
+fi
 
 unset -v meta
 declare -A meta=(

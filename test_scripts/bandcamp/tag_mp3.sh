@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
@@ -80,7 +80,11 @@ _status=1
 
 > "$callfile"
 _expected_artist='a b'
-! retag_mp3 dest.mp3 42 'lsilsi jrejre' meta
+if retag_mp3 dest.mp3 42 'lsilsi jrejre' meta
+then
+    : Should have failed
+    exit 1
+fi
 test "$(cat "$callfile")" = ok
 
 : With custom artist.

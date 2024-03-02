@@ -1,12 +1,16 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/bandcamp_functions.sh
 . lib/bandcamp_functions.sh
 
 
-! ( apply_cover_if_we_got_one; true )
+if ( apply_cover_if_we_got_one; true )
+then
+    : Should have failed
+    exit 1
+fi
 
 COVER_LQ_BASENAME=poire
 SETCOVER=mock_setcover

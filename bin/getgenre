@@ -1,0 +1,206 @@
+#! /usr/bin/env bash
+
+readonly BASE_URL='https://musicbrainz.org/ws/2'
+readonly QUERY_AND=' AND '
+declare -ri API_VERSION=2
+declare -ri DEFAULT_NUMBER=1
+readonly COMMON_PARAMETERS="fmt=json&limit=1&version=${API_VERSION}"
+
+# ========
+
+print_help() {
+    cat << _HELP_
+
+  Utility to fetch musical genres from the web.
+  Currently relies on MusicBrainz tags, giving a higher
+  priority to those with a high “count”.
+  Note that these may refer to things that are not genres,
+  so the resulting suggestions must be taken with a bit of caution.
+
+  If only an artist name is provided, an artist search is done.
+  If both an artist name and a release name are provided, we first look
+  for a release (technically a “release group”), and use an artist search
+  as fallback if no tags are found.
+
+  Options:
+    -a A, --artist A    Use “A” as “part of the artist name” search query criterion.
+    -r R, --release R   Use “R” as “part of the release name” search query criterion.
+    -n N, --number N    List at most N results, one per line, with the best ones first.
+                        Defaults to ${DEFAULT_NUMBER}.
+    -h, --help          Print this help message and exit.
+
+  Exits with 0 status if at least one tag could be found.
+
+_HELP_
+}
+
+# Make sure we’re ready to start (after command parsing).
+checks() {
+    local error
+    if ! type jq &> /dev/null
+    then
+        error=1
+        printf '%s: Error: “jq” program not found.\n' "$(basename "$0")" >&2
+    fi
+    if ! type curl &> /dev/null
+    then
+        error=1
+        printf '%s: Error: “curl” program not found.\n' "$(basename "$0")" >&2
+    fi
+    if [[ -z $opt_artist ]]
+    then
+        error=1
+        print_help
+        printf '%s: Error: Gave no artist name.\n' "$(basename "$0")" >&2
+    fi
+
+    if [[ $error ]]
+    then
+        exit 1
+    fi
+}
+
+# $@    Extra arguments
+curl_with_options() {
+    curl --no-progress-meter "$@"
+}
+
+# $1    String to encode
+uri_encode() {
+    jq -rR '@uri' <<< "$1"
+}
+
+# https://lucene.apache.org/core/4_3_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#Escaping_Special_Characters
+#
+# $1    String to escape
+escape_for_apache_lucene() {
+    sed '
+        s,[][+&|!(){}^"~*?:\\/-],\\&,g
+    ' <<< "$1"
+}
+
+# Get .foo[0].tags, sort by count, get the tag names,
+# and keep the first results according to “$opt_number”.
+#
+# $1    JSON
+# $2    Name of root field holding results (“artists”,  “release-groups”…).
+get_tags_from() {
+    jq -r "
+        limit(
+            ${opt_number:?};
+            .\"${2:?Field name}\"[0].tags |
+                    sort_by(-.count)[].name // empty
+        )
+    " <<< "$1" 2> /dev/null
+}
+
+# Print the result and exit with a 0 status if we’re happy with
+# what we got.
+# The found tags are capitalized (sentence case).
+# Do nothing if no result.
+#
+# $1    Potential result. May be multiline (one tag per line).
+if_result_print_and_exit() {
+    if [[ $1 ]]
+    then
+        # shellcheck disable=SC2001 # Hard to do with “${…/…/…}”.
+        sed 's/.*/\u&/' <<< "$1"
+        exit 0
+    fi
+}
+
+# Read the command and set a bunch of global option-related
+# “opt_*” variables.
+#
+# $@    Arguments of the script itself, forwarded as-is.
+parse_command() {
+    local word
+    # Defaults
+    # shellcheck disable=SC2154 # https://github.com/koalaman/shellcheck/issues/1500
+    unset -v "${!opt_@}"
+    declare -ig opt_number=$DEFAULT_NUMBER
+    while (($# > 0))
+    do
+        word=$1
+        shift
+        case $word in
+            -a|--artist)
+                opt_artist=${1:?No artist given after “$word”.}
+                shift
+                ;;
+
+            -r|--release)
+                opt_release=${1:?No release given after “$word”.}
+                shift
+                ;;
+
+            -n|--number)
+                opt_number=${1:?No number given after “$word”.}
+                shift
+                if ((opt_number < 1))
+                then
+                    printf '%s: Error: Asked for fewer than one result.\n' "$(basename "$0")" >&2
+                    exit 1
+                fi
+                ;;
+
+            -h|--help)
+                print_help
+                exit 0
+                ;;
+
+            *)
+                print_help
+                printf '%s: Error: Unrecognized argument: %q\n' "$(basename "$0")" "$word" >&2
+                exit 2
+                ;;
+        esac
+    done
+}
+
+look_for_release() {
+    local query
+    query+="artistname:$(escape_for_apache_lucene "$opt_artist")"
+    query+=$QUERY_AND
+    query+="releasegroup:$(escape_for_apache_lucene "$opt_release")"
+
+    local url="$BASE_URL/release-group/"
+    url+="?${COMMON_PARAMETERS}"
+    url+="&query=$(uri_encode "$query")"
+
+    local json
+    json=$(curl_with_options "$url")
+    local result
+    result=$(get_tags_from "$json" release-groups)
+
+    if_result_print_and_exit "$result"
+}
+
+look_for_artist() {
+    local query
+    query+="artistname:$(escape_for_apache_lucene "$opt_artist")"
+
+    local url="$BASE_URL/artist/"
+    url+="?${COMMON_PARAMETERS}"
+    url+="&query=$(uri_encode "$query")"
+
+    local json
+    json=$(curl_with_options "$url")
+    local result
+    result=$(get_tags_from "$json" artists)
+
+    if_result_print_and_exit "$result"
+}
+
+# ========
+
+parse_command "$@"
+checks
+if [[ $opt_release ]]
+then
+    look_for_release
+fi
+look_for_artist
+
+# If we got there, it means that we could find nothing.
+exit 1

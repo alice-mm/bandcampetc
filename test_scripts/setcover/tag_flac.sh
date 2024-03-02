@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -evx
+set -ex
 
 # shellcheck source=../../lib/setcover_functions.sh
 . lib/setcover_functions.sh
@@ -25,10 +25,26 @@ function metaflac {
 }
 
 
-! ( f_tag_flac;         true )
-! ( f_tag_flac '';      true )
-! ( f_tag_flac '' '';   true )
-! ( f_tag_flac '' foo;  true )
+if ( f_tag_flac;         true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( f_tag_flac '';      true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( f_tag_flac '' '';   true )
+then
+    : Should have failed
+    exit 1
+fi
+if ( f_tag_flac '' foo;  true )
+then
+    : Should have failed
+    exit 1
+fi
 
 
 _list=$(
