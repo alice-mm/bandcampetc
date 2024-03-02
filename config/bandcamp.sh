@@ -1,5 +1,5 @@
 #! /usr/bin/env bash
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034 # This file is meant to be sourced; no need to export stuff.
 
 # Set music directory. Just remove these lines and
 # hard-code a path if you want to use something else:
@@ -70,5 +70,9 @@ readonly MMETA_PLACEHOLDER='Unknown'
 readonly COVER_LQ_BASENAME='cover_lq.jpg'
 # Given to Lame when creating MP3 files from HQ files.
 readonly CONVERTED_MP3_RATE=128k
+# Maximal number of tags fetched from the MusicBrainz API
+# when trying to get genre info. Using an overkill value can yield
+# out-of-topic tags such as city names and the like.
+declare -ri NUMBER_OF_MUSICBRAINZ_TAGS=3
 # Set to non empty value to activate debug logs.
 PRINT_DEBUG=''
