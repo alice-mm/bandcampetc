@@ -153,10 +153,12 @@ function clean_hierarchy {
 # Exits with 0 status iff it contains a “.mp3” or “.flac” file.
 function mp3_or_flac_in_zip {
     local archive=${1:?No archive given.}
-    (
-        set -o pipefail
-        unzip -l "$archive" | grep -iqE '.\.(flac|mp3)$'
-    )
+    # Got intermittent failures and ditched the pipe for an intermediate variable.
+    # See:
+    # https://unix.stackexchange.com/questions/782524/inconsistent-unzip-l-grep-q-results-with-pipefail/782525
+    local listing
+    listing=$(unzip -l "$archive")
+    grep -iqE '[^/]\.(flac|mp3)$' <<< "$listing"
 }
 
 
